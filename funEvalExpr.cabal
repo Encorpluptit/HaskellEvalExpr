@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 17cf7a18e4b77cf999f067bf83fba2df63b83836e6acdc52cb280739cb4e45f3
+-- hash: ecdf405cfb40a92ff42895de4e14b4885e412ffd8e5b69857852ef53d76f5002
 
 name:           funEvalExpr
 version:        0.1.0.0
@@ -19,7 +19,7 @@ license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
-    ChangeLog.md
+    CHANGELOG.md
 
 source-repository head
   type: git
