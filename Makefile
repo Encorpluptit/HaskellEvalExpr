@@ -5,11 +5,11 @@
 ## Makefile
 ##
 
-package = funEvalExpr
+package			=	funEvalExpr
 
-stack_yaml = STACK_YAML="stack.yaml"
-stack = $(stack_yaml) stack
-executable := $(shell stack path --local-install-root)
+stack_yaml		=	STACK_YAML="stack.yaml"
+stack			=	$(stack_yaml) stack
+executable		:=	$(shell stack path --local-install-root)
 
 
 all: build sign
@@ -21,11 +21,12 @@ clean:
 
 
 fclean: clean
+	$(RM) $(package)
 
 
 build:
 	@$(stack) build $(package)
-	@cp $(executable)/bin/$(package) ../$(package)
+	@cp $(executable)/bin/$(package) .
 
 
 build-dirty:
