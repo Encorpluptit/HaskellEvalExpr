@@ -37,6 +37,7 @@ executables:
       - -with-rtsopts=-N
     dependencies:
       - funEvalExpr
+      - containers
 
 tests:
   funEvalExpr-test:
