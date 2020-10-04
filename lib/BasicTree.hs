@@ -2,7 +2,7 @@ module BasicTree where
 import Data.Char
 import qualified Data.Map as M
 
-data Operator = Plus | Minus | Times | Div
+data Operator = Plus | Minus | Multiply | Div | Power
     deriving (Show, Eq)
 
 data Token = TokOp Operator
@@ -23,7 +23,7 @@ exec x = evaluate tree symTab
 operator :: Char -> Operator
 operator c | c == '+' = Plus
            | c == '-' = Minus
-           | c == '*' = Times
+           | c == '*' = Multiply
            | c == '/' = Div
 
 tokenize :: String -> [Token]
@@ -86,7 +86,7 @@ term toks =
    let (facTree, toks') = factor toks
    in
       case lookAhead toks' of
-         (TokOp op) | elem op [Times, Div] ->
+         (TokOp op) | elem op [Multiply, Div] ->
             let (termTree, toks'') = term (accept toks')
             in (ProdNode op facTree termTree, toks'')
          _ -> (facTree, toks')
@@ -149,7 +149,7 @@ evaluate (ProdNode op left right) symTab =
         Left msg -> Left msg
         Right (rgt, symTab'') ->
             case op of
-            Times -> Right (lft * rgt, symTab)
+            Multiply -> Right (lft * rgt, symTab)
             Div   -> Right (lft / rgt, symTab)
 evaluate (UnaryNode op tree) symTab =
     case evaluate tree symTab of

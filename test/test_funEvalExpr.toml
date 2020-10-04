@@ -1,0 +1,75 @@
+binary_path = "../funEvalExpr"
+
+#[test1]
+#args = ["-h"]
+#status = 0
+#
+#[no_arg]
+#args = []
+#status = 84
+#
+#[too_many_args]
+#args = ["tests/examples/example", "b", "c", "d"]
+#status = 84
+#
+#[bad_flag]
+#args = ["-v"]
+#status = 84
+#
+#[no_existant_file]
+#args = ["toto.txt", "12"]
+#status = 84
+#
+#[invalid_file]
+#args = ["302separation", "12"]
+#status = 84
+#
+#[bad_n]
+#args = ["tests/examples/example", "1s2"]
+#status = 84
+#
+#[negative_n]
+#args = ["tests/examples/example", "-1"]
+#status = 84
+
+# good
+
+[simple_test]
+args = ["5+6"]
+status = 0
+stdout = "11.0\n"
+
+[with_zero_without_parenthesis]
+args = ["51297+118*31*1+0*0*0+5*6+5*0-134"]
+status = 0
+stdout = "54851.0\n"
+
+[with_zero_with_one_parenthesis]
+args = ["(51297+118)*31*1+0*0*0+5*6-134"]
+status = 0
+stdout = "1593761.0\n"
+
+[many_zero]
+args = ["51297+118*31*1+0*0*0*0*0*0*0*0*0*0*0*0-0+0+0-134"]
+status = 0
+stdout = "54821.0\n"
+
+#[example_1_yvette_barack]
+#args = ["tests/examples/example", "Yvette Horner", "Barack Obama"]
+#stdout= "Degree of separation between Yvette Horner and Barack Obama: 3\n"
+#status = 0
+#
+#[example_2_yvette_yvette]
+#args = ["tests/examples/example", "Yvette Horner", "Yvette Horner"]
+#stdout= "Degree of separation between Yvette Horner and Yvette Horner: 0\n"
+#status = 0
+#
+#[example_2_yvette_tyson]
+#args = ["tests/examples/example", "Yvette Horner", "Mike Tyson"]
+#stdout= "Degree of separation between Yvette Horner and Mike Tyson: -1\n"
+#status = 0
+#
+#[full_test]
+#args = ["tests/examples/example", "3"]
+#stdout_file = "examples/example_output"
+#status = 0
