@@ -29,7 +29,6 @@ library
   exposed-modules:
       BasicTree
       Boostrap
-      Parsed
       Parser
   other-modules:
       Paths_funEvalExpr
