@@ -26,6 +26,8 @@ dependencies:
 
 library:
   source-dirs: lib
+  dependencies:
+    - containers
 
 executables:
   funEvalExpr:
@@ -37,7 +39,6 @@ executables:
       - -with-rtsopts=-N
     dependencies:
       - funEvalExpr
-      - containers
 
 tests:
   funEvalExpr-test:
