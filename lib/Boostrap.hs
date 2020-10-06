@@ -246,15 +246,15 @@ parseChar c = Parser fct
 --parseAnyChar [a] x  = parseChar a x
 --parseAnyChar [] _   = Left "No match found"
 
-parseOr :: Parser a -> Parser a -> Parser a
-parseOr one two =
-    case one of
-        Parser {runParser= s -> Left _} -> two
---        Parser {} -> case two of
---            Left _  -> Parser {runParser=Left "Parsing 'Or' failed" }
---            r'      -> Parser r'
-        r -> r
---    where
---        f = Parser
 --parseOr :: Parser a -> Parser a -> Parser a
---parseOr one two = one two
+--parseOr one two =
+--    case one of
+--        Parser {runParser= s -> Left _} -> two
+----        Parser {} -> case two of
+----            Left _  -> Parser {runParser=Left "Parsing 'Or' failed" }
+----            r'      -> Parser r'
+--        r -> r
+----    where
+----        f = Parser
+----parseOr :: Parser a -> Parser a -> Parser a
+----parseOr one two = one two

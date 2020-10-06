@@ -26,8 +26,8 @@ dependencies:
 
 library:
   source-dirs: lib
-  dependencies:
-    - containers
+#  dependencies:
+#    - containers
 
 executables:
   funEvalExpr:
