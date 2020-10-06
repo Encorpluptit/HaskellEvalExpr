@@ -14,11 +14,10 @@ data Token = TokOp Operator
            | TokEnd
     deriving (Show, Eq)
 
-exec :: String -> Either String (Double, SymTab)
-exec x = evaluate tree symTab
+exec :: String -> Either String Double
+exec x = evaluate tree
    where
        tree = parse $ tokenize x
-       symTab = M.fromList [("pi", pi)]
 
 operator :: Char -> Operator
 operator c | c == '+' = Plus
@@ -117,53 +116,32 @@ parse toks = let (tree, toks') = expression toks
 ---- evaluator ----
 -- show
 
-type SymTab = M.Map String Double
-
-lookUp :: String -> SymTab -> Either String (Double, SymTab)
-lookUp str symTab =
-    case M.lookup str symTab of
-      Just v  -> Right (v, symTab)
-      Nothing -> Left ("Undefined variable " ++ str)
-
-addSymbol :: String -> Double -> SymTab -> Either String ((), SymTab)
-addSymbol str val symTab =
-    let symTab' = M.insert str val symTab
-    in Right ((), symTab')
-
-evaluate :: Tree -> SymTab -> Either String (Double, SymTab)
-evaluate (SumNode op left right) symTab =
-    case evaluate left symTab of
+evaluate :: Tree -> Either String Double
+evaluate (SumNode op left right) =
+    case evaluate left of
     Left msg -> Left msg
-    Right (lft, symTab') ->
-        case evaluate right symTab' of
+    Right lft ->
+        case evaluate right of
         Left msg -> Left msg
-        Right (rgt, symTab'') ->
+        Right rgt ->
             case op of
-            Plus  -> Right (lft + rgt, symTab'')
-            Minus -> Right (lft - rgt, symTab'')
-evaluate (ProdNode op left right) symTab =
-    case evaluate left symTab of
+            Plus  -> Right (lft + rgt)
+            Minus -> Right (lft - rgt)
+evaluate (ProdNode op left right) =
+    case evaluate left of
     Left msg -> Left msg
-    Right (lft, symTab') ->
-        case evaluate right symTab' of
+    Right lft ->
+        case evaluate right of
         Left msg -> Left msg
-        Right (rgt, symTab'') ->
+        Right rgt ->
             case op of
-            Multiply -> Right (lft * rgt, symTab)
-            Div   -> Right (lft / rgt, symTab)
-evaluate (UnaryNode op tree) symTab =
-    case evaluate tree symTab of
+            Multiply -> Right (lft * rgt)
+            Div   -> Right (lft / rgt)
+evaluate (UnaryNode op tree) =
+    case evaluate tree of
     Left msg -> Left msg
-    Right (x, symTab') ->
+    Right x ->
         case op of
-        Plus  -> Right ( x, symTab')
-        Minus -> Right (-x, symTab')
-evaluate (NumNode x) symTab = Right (x, symTab)
-evaluate (VarNode str) symTab = lookUp str symTab
-evaluate (AssignNode str tree) symTab =
-    case evaluate tree symTab of
-    Left msg -> Left msg
-    Right (v, symTab') ->
-        case addSymbol str v symTab' of
-        Left msg -> Left msg
-        Right (_, symTab'') -> Right (v, symTab'')
+        Plus  -> Right x
+        Minus -> Right (-x)
+evaluate (NumNode x )= Right x

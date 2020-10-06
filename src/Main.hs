@@ -22,5 +22,5 @@ main = do
     [] ->  exit_error "No args given"
     (x:_) -> case exec x of
          Left msg -> exit_error $ "Error: " ++ msg
-         Right (v, _) -> print v
+         Right v -> print v
 
