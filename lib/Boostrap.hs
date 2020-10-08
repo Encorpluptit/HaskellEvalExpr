@@ -2,6 +2,7 @@ module Boostrap where
 
 import Data.Maybe
 import Data.Either
+import Control.Applicative
 
 
 -----------------------------------------------------------------------------------------------------
@@ -235,26 +236,86 @@ parseChar c = Parser fct
     where
         fct (x:xs)
             | x == c    = Right (c, xs)
-            | otherwise = Left "No match found"
-        fct [] = Left "No match found"
+            | otherwise = Left $ "ParseChar failed {Left:" ++ xs ++ "}"
+        fct [] = Left "ParseChar failed: Empty or End of List"
 
---parseAnyChar :: String -> Parser Char
---parseAnyChar (a:b:as) x =
---    case parseOr (parseChar a) (parseChar b) x of
---        Left _  -> parseAnyChar as x
---        r       -> r
---parseAnyChar [a] x  = parseChar a x
---parseAnyChar [] _   = Left "No match found"
+parseAnyChar :: String -> Parser Char
+parseAnyChar str@(a:as) = parseOr (parseChar a) (parseAnyChar as)
+parseAnyChar [] = Parser (\x -> Left "ParseAnyChar failed: Empty or End of List")
 
---parseOr :: Parser a -> Parser a -> Parser a
---parseOr one two =
---    case one of
---        Parser {runParser= s -> Left _} -> two
-----        Parser {} -> case two of
-----            Left _  -> Parser {runParser=Left "Parsing 'Or' failed" }
-----            r'      -> Parser r'
---        r -> r
-----    where
-----        f = Parser
-----parseOr :: Parser a -> Parser a -> Parser a
-----parseOr one two = one two
+parseOr :: Parser a -> Parser a -> Parser a
+parseOr one two = Parser fct
+    where
+        fct s = case runParser one s of
+            Left _ -> runParser two s
+            r -> r
+
+parseAnd :: Parser a -> Parser b -> Parser (a,b)
+parseAnd first second = parseAndWith (\x y -> (x,y)) first second
+
+parseAndWith :: ( a -> b -> c ) -> Parser a -> Parser b -> Parser c
+parseAndWith with first second = Parser fct
+    where
+        fct s = case runParser first s of
+            Right (r, left) -> case runParser second left of
+                Right (r', left') -> Right (with r r', left')
+                Left msg -> Left $ "ParseAndWith failed at second parser {Left:" ++ left ++ "}"
+            Left msg -> Left $ "ParseAndWith failed at first parser {Left:" ++ s ++ "}"
+
+parseMany :: Parser a -> Parser [a]
+parseMany parser = Parser fct
+    where
+        fct s = case runParser (parseAndWith (:) parser (parseMany parser)) s of
+            Left _  -> Right ([], s)
+            r       -> r
+
+parseSome :: Parser a -> Parser [a]
+parseSome parser = Parser fct
+    where
+        fct s = case runParser (parseAnd parser (parseMany parser)) s of
+            Right (a, as)   -> Right (uncurry (:) a, as)
+            _               -> Left $ "ParseSome failed {Left:" ++ s ++ "}"
+
+parseUInt :: Parser Int
+parseUInt = Parser fct
+    where
+        fct s = case runParser (parseSome $ parseAnyChar ['0'..'9']) s of
+            Right (x, xs) -> Right (read x :: Int, xs)
+            _ -> Left "Target is not a UInt"
+
+parseInt :: Parser Int
+parseInt  = Parser fct
+    where
+        fct s = case runParser (parseChar '-') s of
+            Right (_, xs)   -> case runParser parseUInt xs of
+                Right (x, xs')  -> Right (negate x, xs')
+                r               -> r
+            _               -> runParser parseUInt s
+
+instance Functor Parser where
+    fmap f (Parser p) = Parser fct
+        where
+            fct s = case p s of
+                Right (x, xs) -> Right (f x, xs)
+                Left b -> Left b
+
+instance Applicative Parser where
+    pure p = Parser $ \x -> Right (p, x)
+    Parser p1 <*> p2 = Parser fct
+        where
+            fct s = case p1 s of
+                Right (f, left) -> case runParser p2 left of
+                    Right (a, left')  -> Right (f a, left')
+                    Left msg        -> Left msg
+                Left msg -> Left msg
+
+instance Alternative Parser where
+    empty = Parser $ const $ Left "parser Empty"
+    (Parser p1) <|> (Parser p2) = Parser fct
+        where
+            fct s = case p1 s of
+                Left _ -> case p2 s of
+                    Left msg        -> Left msg
+                    Right (a', left') -> Right (a', left')
+                r -> r
+-- TODO: AST

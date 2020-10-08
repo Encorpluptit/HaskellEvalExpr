@@ -81,14 +81,14 @@ expression toks =
          _ -> (termTree, toks')
 
 term :: [Token] -> (Tree, [Token])
-term toks =
-   let (facTree, toks') = factor toks
-   in
-      case lookAhead toks' of
-         (TokOp op) | elem op [Multiply, Div] ->
-            let (termTree, toks'') = term (accept toks')
-            in (ProdNode op facTree termTree, toks'')
-         _ -> (facTree, toks')
+term toks =case lookAhead toks' of
+    (TokOp op) | elem op [Multiply, Div] ->
+        let (termTree, toks'') = term (accept toks')
+        in (ProdNode op facTree termTree, toks'')
+    _ -> (facTree, toks')
+    where
+        (facTree, toks') = factor toks
+
 
 factor :: [Token] -> (Tree, [Token])
 factor toks =
@@ -119,29 +119,24 @@ parse toks = let (tree, toks') = expression toks
 evaluate :: Tree -> Either String Double
 evaluate (SumNode op left right) =
     case evaluate left of
-    Left msg -> Left msg
-    Right lft ->
-        case evaluate right of
+        Right lft -> case evaluate right of
+            Right rgt -> case op of
+                Plus  -> Right (lft + rgt)
+                Minus -> Right (lft - rgt)
+            Left msg -> Left msg
         Left msg -> Left msg
-        Right rgt ->
-            case op of
-            Plus  -> Right (lft + rgt)
-            Minus -> Right (lft - rgt)
 evaluate (ProdNode op left right) =
     case evaluate left of
-    Left msg -> Left msg
-    Right lft ->
-        case evaluate right of
+        Right lft -> case evaluate right of
+            Right rgt -> case op of
+                Multiply -> Right (lft * rgt)
+                Div   -> Right (lft / rgt)
+            Left msg -> Left msg
         Left msg -> Left msg
-        Right rgt ->
-            case op of
-            Multiply -> Right (lft * rgt)
-            Div   -> Right (lft / rgt)
 evaluate (UnaryNode op tree) =
     case evaluate tree of
-    Left msg -> Left msg
-    Right x ->
-        case op of
-        Plus  -> Right x
-        Minus -> Right (-x)
+        Right x -> case op of
+            Plus  -> Right x
+            Minus -> Right (-x)
+        Left msg -> Left msg
 evaluate (NumNode x )= Right x

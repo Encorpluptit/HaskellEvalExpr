@@ -4,6 +4,7 @@ import System.Environment (getArgs)
 import System.Exit
 import System.IO
 import BasicTree
+import Calc
 
 
 write_error :: String -> IO ()
@@ -24,3 +25,12 @@ main = do
          Left msg -> exit_error $ "Error: " ++ msg
          Right v -> print v
 
+--main :: IO()
+--main = do
+--  args <- getArgs
+--  case args of
+--    [] ->  exit_error "No args given"
+--    (x:_) -> case evalExpr x of
+--         Nothing -> exit_error $ "Error"
+--         Just v -> print v
+--
