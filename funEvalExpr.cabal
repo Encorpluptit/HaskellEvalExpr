@@ -27,9 +27,7 @@ source-repository head
 
 library
   exposed-modules:
-      BasicTree
       Boostrap
-      Parser
       Calc
   other-modules:
       Paths_funEvalExpr
@@ -37,9 +35,6 @@ library
       lib
   build-depends:
       base >=4.7 && <5
-    , containers
-    , parallel
-    , random
   default-language: Haskell2010
 
 executable funEvalExpr
@@ -52,8 +47,6 @@ executable funEvalExpr
   build-depends:
       base >=4.7 && <5
     , funEvalExpr
-    , parallel
-    , random
   default-language: Haskell2010
 
 test-suite funEvalExpr-test
