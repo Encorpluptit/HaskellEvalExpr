@@ -68,6 +68,7 @@ ghcid:
 dev-deps:
 	stack install ghcid
 
+tests_run: test
 
 sign:
 	@echo ""

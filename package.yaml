@@ -21,8 +21,8 @@ description:         Please see the README on GitHub at <https://github.com/Enco
 
 dependencies:
   - base >= 4.7 && < 5
-  - random
-  - parallel
+#  - random
+#  - parallel
 
 library:
   source-dirs: lib
@@ -43,7 +43,7 @@ executables:
 tests:
   funEvalExpr-test:
     main:                Spec.hs
-    source-dirs:         test
+    source-dirs:         tests
     ghc-options:
       - -threaded
       - -rtsopts

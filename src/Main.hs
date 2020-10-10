@@ -15,15 +15,6 @@ exit_error str = do
     write_error str
     exitWith  $ ExitFailure 84
 
---main :: IO()
---main = do
---  args <- getArgs
---  case args of
---    [] ->  exit_error "No args given"
---    (x:_) -> case exec x of
---         Left msg -> exit_error $ "Error: " ++ msg
---         Right v -> print v
-
 main :: IO()
 main = do
   args <- getArgs
