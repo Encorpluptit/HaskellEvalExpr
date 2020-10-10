@@ -251,7 +251,7 @@ parseOr one two = Parser fct
             r -> r
 
 parseAnd :: Parser a -> Parser b -> Parser (a,b)
-parseAnd first second = parseAndWith (\x y -> (x,y)) first second
+parseAnd = parseAndWith (\x y -> (x,y))
 
 parseAndWith :: ( a -> b -> c ) -> Parser a -> Parser b -> Parser c
 parseAndWith with first second = Parser fct
@@ -277,20 +277,13 @@ parseSome parser = Parser fct
             _               -> Left $ "ParseSome failed {Left:" ++ s ++ "}"
 
 parseUInt :: Parser Int
-parseUInt = Parser fct
-    where
-        fct s = case runParser (parseSome $ parseAnyChar ['0'..'9']) s of
-            Right (x, xs) -> Right (read x :: Int, xs)
-            _ -> Left "Target is not a UInt"
+parseUInt = fmap read (parseSome $ parseAnyChar ['0'..'9'])
 
 parseInt :: Parser Int
-parseInt  = Parser fct
+parseInt = parseNegInt <|> parseUInt
     where
-        fct s = case runParser (parseChar '-') s of
-            Right (_, xs)   -> case runParser parseUInt xs of
-                Right (x, xs')  -> Right (negate x, xs')
-                r               -> r
-            _               -> runParser parseUInt s
+        parseNegInt = fct <$> (parseChar '-') <*> parseUInt
+        fct c = negate
 
 instance Functor Parser where
     fmap f (Parser p) = Parser fct
@@ -301,10 +294,10 @@ instance Functor Parser where
 
 instance Applicative Parser where
     pure p = Parser $ \x -> Right (p, x)
-    Parser p1 <*> p2 = Parser fct
+    Parser p1 <*> Parser p2 = Parser fct
         where
             fct s = case p1 s of
-                Right (f, left) -> case runParser p2 left of
+                Right (f, left) -> case p2 left of
                     Right (a, left')  -> Right (f a, left')
                     Left msg        -> Left msg
                 Left msg -> Left msg
@@ -315,7 +308,7 @@ instance Alternative Parser where
         where
             fct s = case p1 s of
                 Left _ -> case p2 s of
-                    Left msg        -> Left msg
-                    Right (a', left') -> Right (a', left')
+                    Right a -> Right a
+                    r'        -> r'
                 r -> r
 -- TODO: AST

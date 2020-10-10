@@ -15,34 +15,23 @@ parseChar c = Parser fct
             | otherwise = Nothing
         fct [] = Nothing
 
-
+-- Using Alternative <|> (parseOr) to parse a char or the rest of the string
 parseAnyChar :: String -> Parser Char
-parseAnyChar str@(a:as) = parseOr (parseChar a) (parseAnyChar as)
+parseAnyChar (a:as) = parseChar a <|> parseAnyChar as
 parseAnyChar [] = Parser (\x -> Nothing)
 
-
-parseOr :: Parser a -> Parser a -> Parser a
-parseOr one two = Parser fct
-    where
-        fct s = case runParser one s of
-            Nothing -> runParser two s
-            r -> r
-
-
+-- Using ParseAndWith with lambda (prelude possible ?) to apply both parser and get a tuple of parsed elements
 parseAnd :: Parser a -> Parser b -> Parser (a,b)
-parseAnd first second = parseAndWith (\x y -> (x,y)) first second
+parseAnd = parseAndWith (\x y -> (x,y))
 
-
+-- Using Applicative Functor to apply Parser a and Parser b with the fct given in parameter
+-- See Applicative Functor
 parseAndWith :: ( a -> b -> c ) -> Parser a -> Parser b -> Parser c
-parseAndWith with first second = Parser fct
-    where
-        fct s = case runParser first s of
-            Just (r, left) -> case runParser second left of
-                Just (r', left')    -> Just (with r r', left')
-                Nothing             -> Nothing
-            Nothing -> Nothing
+parseAndWith fct first second = fct <$> first <*> second
 
-
+-- Using recursive to parse with Parser a and adding each parsed element to a list of parsed elements
+-- (:) -> fct that take 2 args (an elem and a list) and prepend (insert before) that elem to the list.
+-- (:) :: a -> [a] -> [a]
 parseMany :: Parser a -> Parser [a]
 parseMany parser = Parser fct
     where
@@ -50,31 +39,26 @@ parseMany parser = Parser fct
             Nothing -> Just ([], s)
             r       -> r
 
-
+-- Using fmap infix notation to parse with the fct contained in Parser a and apply (:) to the tuple returned by parseAnd
+-- uncurry -> fct that take 2 args (a fct with 2 params and a tuple) to and apply this fct with the elems of this tuple as args of the fct.
+-- uncurry :: (a -> b -> c) -> (a, b) -> c
+-- Here unpack the tuple (a,b) and apply the fct a -> b -> c with a first arg and b second arg
+-- See Functor (fmap)
 parseSome :: Parser a -> Parser [a]
-parseSome parser = Parser fct
-    where
-        fct s = case runParser (parseAnd parser (parseMany parser)) s of
-            Just (a, as)   -> Just (uncurry (:) a, as)
-            _               -> Nothing
+parseSome parser = uncurry (:) <$> parseAnd parser (parseMany parser)
 
 
+-- Using fmap infix notation to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
 parseUInt :: Parser Int
-parseUInt = Parser fct
-    where
-        fct s = case runParser (parseSome $ parseAnyChar ['0'..'9']) s of
-            Just (x, xs) -> Just (read x :: Int, xs)
-            _ -> Nothing
+parseUInt = read <$> parseSome (parseAnyChar ['0'..'9'])
 
+-- Using Alternative Functor to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
 parseInt :: Parser Int
-parseInt  = Parser fct
+parseInt = parseNegInt <|> parseUInt
     where
-        fct s = case runParser (parseChar '-') s of
-            -- TODO: Negate
-            Just (_, xs)   -> case runParser parseUInt xs of
-                Just (x, xs')   -> Just (negate x, xs')
-                r               -> r
-            _               -> runParser parseUInt s
+        parseNegInt = fct <$> (parseChar '-') <*> parseUInt
+        fct c = negate
+
 
 instance Functor Parser where
     fmap f (Parser p) = Parser $ \s -> case p s of
@@ -83,20 +67,26 @@ instance Functor Parser where
 
 instance Applicative Parser where
     pure x = Parser $ \s -> Just (x, s)
-    Parser p1 <*> pp2 = Parser $ \s -> case p1 s of
-        Just (f, s') -> case runParser pp2 s' of
+    Parser p1 <*> Parser p2 = Parser $ \s -> case p1 s of
+--        Just (f, s') -> p2 <$> Just (f s', s')
+        Just (f, s') -> case p2 s' of
             Just (a, s'') -> Just (f a, s'')
             Nothing       -> Nothing
         Nothing -> Nothing
 
 instance Alternative Parser where
     empty = Parser $ const Nothing
---    (<|>) = parseOr
-    (Parser p1) <|> (Parser p2) = Parser fct
-        where
-            fct s = case p1 s of
-                Nothing -> p2 s
-                r -> r
+    (Parser p1) <|> (Parser p2) = Parser $ \s -> p1 s <|> p2 s
+
+--instance Alternative Parser where
+--    empty = Parser $ const Nothing
+--    (Parser p1) <|> pp2 = Parser $ \s -> p1 s <|> runParser pp2 s
+----    (<|>) = parseOr
+--    (Parser p1) <|> (Parser p2) = Parser fct
+--        where
+--            fct s = case p1 s of
+--                Nothing -> p2 s
+--                r -> r
 
 --    (Parser p1) <|> pp2 = Parser $ \s -> p1 s <|> runParser pp2 s
 
