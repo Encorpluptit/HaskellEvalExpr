@@ -23,63 +23,63 @@ data Expr x = Num x String
             | Error
 
 evalExpr :: String -> Result Int
-evalExpr s = case pAdditive s of
-		Num v rem -> Right (v, rem)
-		_ -> error "Parse error"
+evalExpr s = case additive s of
+		Num v rem   -> Right (v, rem)
+		_           -> error "Parse error"
 
 -- additive-precedence {+ -}
-pAdditive :: String -> Expr Int
-pAdditive s = alt1 where
+additive :: String -> Expr Int
+-- Additive <- Multitive '+':'-' Additive
+additive s = case multitive s of
+    Num leftValue s' -> case s' of
+        ('+':s'') -> case additive s'' of
+            Num rightValue s''' -> Num (leftValue + rightValue) s'''
+            _                   -> failed
+        ('-':s'') -> case additive s'' of
+            Num rightValue s''' -> Num (leftValue - rightValue) s'''
+            _                   -> failed
+        _ -> failed
+    _ -> failed
 
-    -- Additive <- Multitive '+' Additive
-    alt1 = case pMultitive s of
-        Num vleft s' -> case s' of
-            ('+':s'') -> case pAdditive s'' of
-                Num vright s''' -> Num (vleft + vright) s'''
-                _ -> alt2
-            ('-':s'') -> case pAdditive s'' of
-                Num vright s''' -> Num (vleft - vright) s'''
-                _ -> alt2
-            _ -> alt2
-        _ -> alt2
+    where
+        -- Additive <- Multitive
+        failed = case multitive s of
+           Num v s' -> Num v s'
+           Error -> Error
 
-    -- Additive <- Multitive
-    alt2 = case pMultitive s of
-	     Num v s' -> Num v s'
-	     Error -> Error
+-- multiplicative-precedence {* /}
+multitive :: String -> Expr Int
+-- Multitive <- Primary '*':'/' Multitive
+multitive s = case primary s of
+    Num leftValue s' -> case s' of
+        ('*':s'') -> case multitive s'' of
+            Num rightValue s''' -> Num (leftValue * rightValue) s'''
+            _                   -> failed
+        ('/':s'') -> case multitive s'' of
+            Num rightValue s''' -> Num (leftValue * rightValue) s'''
+            _                   -> failed
+        _ -> failed
+    _ -> failed
 
--- multiplicative-precedence {}
-pMultitive :: String -> Expr Int
--- Multitive <- Primary '*' Multitive
-pMultitive s = alt1 where
-
-    alt1 = case pPrimary s of
-        Num vleft s' -> case s' of
-            ('*':s'') -> case pMultitive s'' of
-                Num vright s''' -> Num (vleft * vright) s'''
-                _ -> alt2
-            _ -> alt2
-        _ -> alt2
-
-    -- Multitive <- Primary
-    alt2 = case pPrimary s of
-        Num v s'    -> Num v s'
-        Error       -> Error
+    where
+        -- Multitive <- Primary
+        failed = case primary s of
+            Num v s'    -> Num v s'
+            Error       -> Error
 
 -- Parse a primary expression
-pPrimary :: String -> Expr Int
+primary :: String -> Expr Int
 -- Primary <- '(' Additive ')'
-pPrimary s = alt1 where
+primary s = case s of
+    ('(':s') -> case additive s' of
+        Num v s'' -> case s'' of
+            (')':s''')  -> Num v s'''
+            _           -> failed
+        _ -> failed
+    _ -> failed
 
-    alt1 = case s of
-        ('(':s') -> case pAdditive s' of
-            Num v s'' -> case s'' of
-                (')':s''') -> Num v s'''
-                _ -> alt2
-            _ -> alt2
-        _ -> alt2
-
-    -- Primary <- Decimal
-    alt2 = case runParser parseInt s of
-        Right (a, as)    -> Num a as
-        Left msg         -> Error
+    where
+        -- Primary <- Decimal
+        failed = case runParser parseInt s of
+            Right (a, as)    -> Num a as
+            Left msg         -> Error
