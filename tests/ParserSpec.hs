@@ -7,19 +7,7 @@ import Boostrap
 
 spec :: Spec
 spec = describe "Lib Parser Testing" $ do
-    describe "Parse Char" $ do
-        it "parse 'a' in \"abcd\" -> Right ('a', \"bcd\")" $ do
-            runParser (parseChar 'a') "abcd" `shouldBe` Right ('a', "bcd")
-        it "parse 'z' in \"abcd\" -> Left _" $ do
-            runParser (parseChar 'z') "abcd" `shouldSatisfy` isLeft
-        it "parse 'a' in \"aaaa\" -> Right ('a', \"aaa\")" $ do
-            runParser (parseChar 'a') "aaaa" `shouldBe` Right ('a', "aaa")
-        it "parse 'b' in \"baaa\" -> Right ('b', \"aaa\")" $ do
-            runParser (parseChar 'b') "baaa" `shouldBe` Right ('b', "aaa")
-        it "parse 'b' in \"bcda\" -> Right ('b', \"cda\")" $ do
-            runParser (parseChar 'b') "bcda" `shouldBe` Right ('b', "cda")
-        it "parse 'b' in \"abcd\" -> Left _" $ do
-            runParser (parseChar 'b') "abcd" `shouldSatisfy` isLeft
+    testParseChar
     describe "Parse Any Char" $ do
         it "parse \"abcd\" in \"abcd\" -> Right ('a', \"bcd\")" $ do
             runParser (parseAnyChar "abcd") "abcd" `shouldBe` Right ('a', "bcd")
