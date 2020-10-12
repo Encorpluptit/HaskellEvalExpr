@@ -3,7 +3,8 @@ module Main where
 import System.Environment (getArgs)
 import System.Exit
 import System.IO
-import Parser
+import Text.Printf
+import RecursiveDescent
 
 
 write_error :: String -> IO ()
@@ -21,15 +22,9 @@ main = do
     case args of
         [] ->  exit_error "No args given"
         (x:_) -> case evalExpr x of
-            Right (a, [])   -> print $ show a
+--            Right (a, [])   -> print $ show a
+--            Right (a, [])   -> printf "%.2f" a
+            Right (a, [])   -> printf "%d\n" a
             -- TODO: Remove when parsing done
-            Right (a, b)    -> print b
+            Right (a, b)    -> exit_error $ "Parsing Failed -> " ++ b
             Left msg        -> exit_error msg
-        (x:_) -> print "OK."
---    case args of
---        [] ->  exit_error "No args given"
---        (x:_) -> print "OK."
---    (x:_) -> case evalExpr x of
---         Nothing -> exit_error $ "Error"
---         Just v -> printf "%.2f" v
-

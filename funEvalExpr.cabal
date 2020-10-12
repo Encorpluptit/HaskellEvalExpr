@@ -28,7 +28,7 @@ source-repository head
 library
   exposed-modules:
       Boostrap
-      Parser
+      RecursiveDescent
   other-modules:
       Paths_funEvalExpr
   hs-source-dirs:
