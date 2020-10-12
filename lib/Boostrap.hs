@@ -4,10 +4,10 @@ import Data.Either
 import Control.Applicative
 
 type Error = String
-type Result a = (a , String)
+type Result a = Either Error (a , String)
 
 data Parser a = Parser {
-    runParser :: String -> Either Error (Result a)
+    runParser :: String -> Result a
 }
 
 parseChar :: Char -> Parser Char
@@ -21,51 +21,16 @@ parseChar c = Parser fct
 parseDigit :: Parser Char
 parseDigit = parseAnyChar ['0'..'9']
 
+parseFloatDigit :: Parser Char
+parseFloatDigit = parseAnyChar ('.':['0'..'9'])
+
 -- Using Alternative <|> (parseOr) to parse a char or the rest of the string
 parseAnyChar :: String -> Parser Char
-parseAnyChar (a:as) = parseChar a <|> parseAnyChar as
-parseAnyChar [] = Parser (\x -> Left "ParseAnyChar failed: Empty or End of List")
-
---parseOr :: Parser a -> Parser a -> Parser a
---parseOr one two = Parser fct
---    where
---        fct s = case runParser one s of
---            Left _ -> runParser two s
---            r -> r
-
---parseAnd :: Parser a -> Parser b -> Parser (a,b)
---parseAnd = parseAndWith (\x y -> (x,y))
---
---parseAndWith :: ( a -> b -> c ) -> Parser a -> Parser b -> Parser c
---parseAndWith with first second = Parser fct
---    where
---        fct s = case runParser first s of
---            Right (r, left) -> case runParser second left of
---                Right (r', left') -> Right (with r r', left')
---                Left msg -> Left $ "ParseAndWith failed at second parser {Left:" ++ left ++ "}"
---            Left msg -> Left $ "ParseAndWith failed at first parser {Left:" ++ s ++ "}"
-
---parseMany :: Parser a -> Parser [a]
---parseMany parser = Parser fct
---    where
---        fct s = case runParser (parseAndWith (:) parser (parseMany parser)) s of
---            Left _  -> Right ([], s)
---            r       -> r
-
--- Using fmap infix notation to parse with the fct contained in Parser a and apply (:) to the tuple returned by parseAnd
--- uncurry -> fct that take 2 args (a fct with 2 params and a tuple) to and apply this fct with the elems of this tuple as args of the fct.
--- uncurry :: (a -> b -> c) -> (a, b) -> c
--- Here unpack the tuple (a,b) and apply the fct a -> b -> c with a first arg and b second arg
--- See Functor (fmap)
---parseSome :: Parser a -> Parser [a]
---parseSome parser = uncurry (:) <$> parseAnd parser (parseMany parser)
-
---parseSome :: Parser a -> Parser [a]
---parseSome parser = Parser fct
---    where
---        fct s = case runParser (parseAnd parser (parseMany parser)) s of
---            Right (a, as)   -> Right (uncurry (:) a, as)
---            _               -> Left $ "ParseSome failed {Left:" ++ s ++ "}"
+--parseAnyChar (a:as) = parseChar a <|> parseAnyChar as
+--parseAnyChar [] = Parser (\x -> Left "ParseAnyChar failed: Empty or End of List")
+--parseAnyChar as = foldr ((<|>) . parseChar) fail as
+parseAnyChar = foldr ((<|>) . parseChar) fail
+    where fail = Parser (\ x -> Left "ParseAnyChar failed: Empty or End of List")
 
 -- Using fmap infix notation to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
 parseUInt :: Parser Int
@@ -75,7 +40,19 @@ parseUInt = read <$> some parseDigit
 parseInt :: Parser Int
 parseInt = parseNegInt <|> parseUInt
     where
-        parseNegInt = (\x -> negate) <$> (parseChar '-') <*> parseUInt
+--        parseNegInt = const negate <$> parseChar '-' <*> parseUInt
+        parseNegInt = (negate <$ parseChar '-') <*> parseUInt
+
+-- Using fmap infix notation to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
+parseUFloat :: Parser Float
+parseUFloat = (read::String->Float) <$> some parseFloatDigit
+
+-- Using Alternative Functor to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
+parseFloat :: Parser Float
+parseFloat = parseNegFloat <|> parseUFloat
+    where
+--        parseNegFloat = const negate <$> parseChar '-' <*> parseUFloat
+        parseNegFloat = (negate <$ parseChar '-') <*> parseUFloat
 
 parseSpaced :: Parser a -> Parser a
 parseSpaced p = many (parseChar ' ') *> p <* many (parseChar ' ')
@@ -84,7 +61,6 @@ parseTuple :: Parser a -> Parser (a, a)
 parseTuple p = openPar *> parseTuple' <* closePar
     where
         parseTuple'     = parseElem <|> Parser (\x -> Left "Parsing Tuple Failed")
---        parseElem       = (\x y -> (x, y)) <$> p <*> (parseChar ',' *> p)
         parseElem       = (\x y -> (x, y)) <$> p <*> (comma *> p)
         openPar         = parseSpaced $ parseChar '('
         closePar        = parseSpaced $ parseChar ')'
@@ -127,8 +103,6 @@ instance Alternative Parser where
     -- uncurry :: (a -> b -> c) -> (a, b) -> c
     -- Here unpack the tuple (a,b) and apply the fct a -> b -> c with a first arg and b second arg
     -- See Functor (fmap)
---    some parser = uncurry (:) <$> parseAnd parser (parseMany parser)
---    some parser = uncurry (:) <$> ((\x y -> (x,y)) <$> parser <*> parseMany parser)
     some parser = uncurry (:) <$> fct
         where
             fct = (\x y -> (x,y)) <$> parser <*> many parser
@@ -141,13 +115,6 @@ instance Alternative Parser where
             fct s = case runParser ((:) <$> parser <*> many parser) s of
                 Left _  -> Right ([], s)
                 r       -> r
-
---parseMany :: Parser a -> Parser [a]
---parseMany parser = Parser fct
---    where
---        fct s = case runParser ((:) <$> parser <*> parseMany parser) s of
---            Left _  -> Right ([], s)
---            r       -> r
 
 -- https://stackoverflow.com/questions/44472008/why-is-there-no-alternative-instance-for-either-but-a-semigroup-that-behaves-sim
 -- https://gitlab.haskell.org/ghc/ghc/-/issues/9588
