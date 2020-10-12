@@ -29,7 +29,6 @@ library
   exposed-modules:
       Boostrap
       Parser
---      Calc
   other-modules:
       Paths_funEvalExpr
   hs-source-dirs:

@@ -3,7 +3,6 @@ module Main where
 import System.Environment (getArgs)
 import System.Exit
 import System.IO
-import Text.Printf
 import Parser
 
 
