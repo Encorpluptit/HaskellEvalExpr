@@ -5,9 +5,9 @@ import Control.Applicative
 data Expr = Add Expr Expr
           | Sub Expr Expr
           | Mul Expr Expr
-          | Lit Integer
+          | Lit Float
 
-eval :: Expr -> Integer
+eval :: Expr -> Float
 eval e = case e of
   Add a b -> eval a + eval b
   Sub a b -> eval a - eval b
@@ -52,19 +52,20 @@ char c = check (== c)
 oneOf :: [Char] -> Parser Char
 oneOf cs = check (\c -> elem c cs)
 
-number :: Parser Integer
+number :: Parser Float
 number = read <$> some digit
   where digit = oneOf "0123456789"
 
 expr :: Parser Expr
 expr = add_sub
-  where
-    add_sub = binOp Add '+' mul <|> binOp Sub '-' mul <|> mul
-    mul = binOp Mul '*' factor <|> factor
-    factor = parens <|> lit
-    lit = Lit <$> number
-    parens = char '(' *> expr <* char ')'
-    binOp c o p = c <$> p <*> (char o *> p)
+    where
+        add_sub     = binOp Add '+' mul <|> binOp Sub '-' mul <|> mul
+        mul         = binOp Mul '*' factor <|> factor
+        factor      = parens <|> lit
+        lit         = Lit <$> number
+        parens      = char '(' *> expr <* char ')'
+        binOp c o p = c <$> p <*> (char o *> p)
 
-evalExpr :: String -> Maybe Integer
-evalExpr s = (fmap eval) $ runParser expr $ concat $ words s
+evalExpr :: String -> Maybe Float
+evalExpr s = eval <$> runParser expr s
+--evalExpr s = (fmap eval) $ runParser expr s

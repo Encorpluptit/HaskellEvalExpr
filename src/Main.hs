@@ -3,7 +3,8 @@ module Main where
 import System.Environment (getArgs)
 import System.Exit
 import System.IO
-import Calc
+import Text.Printf
+import Parser
 
 
 write_error :: String -> IO ()
@@ -17,10 +18,19 @@ exit_error str = do
 
 main :: IO()
 main = do
-  args <- getArgs
-  case args of
-    [] ->  exit_error "No args given"
-    (x:_) -> case evalExpr x of
-         Nothing -> exit_error $ "Error"
-         Just v -> print v
+    args <- getArgs
+    case args of
+        [] ->  exit_error "No args given"
+        (x:_) -> case evalExpr x of
+            Right (a, [])   -> print $ show a
+            -- TODO: Remove when parsing done
+            Right (a, b)    -> print b
+            Left msg        -> exit_error msg
+        (x:_) -> print "OK."
+--    case args of
+--        [] ->  exit_error "No args given"
+--        (x:_) -> print "OK."
+--    (x:_) -> case evalExpr x of
+--         Nothing -> exit_error $ "Error"
+--         Just v -> printf "%.2f" v
 
