@@ -14,6 +14,7 @@ import Boostrap (
 --
 -- https://www.booleanworld.com/building-recursive-descent-parsers-definitive-guide/
 
+
 -- Additive and Multiplicative Principles:
 --
 -- http://www.math.wichita.edu/~hammond/class-notes/section-counting-basics.html
@@ -24,8 +25,8 @@ data Expr x = Num x String
 
 evalExpr :: String -> Result Int
 evalExpr s = case additive s of
-		Num v rem   -> Right (v, rem)
-		_           -> error "Parse error"
+    Num v rem   -> Right (v, rem)
+    _           -> error "Parse error"
 
 -- additive-precedence {+ -}
 additive :: String -> Expr Int
@@ -34,7 +35,6 @@ additive s = case multitive s of
     Num leftValue s' -> case s' of
         ('+':s'') -> case additive s'' of
             Num rightValue s''' -> Num (leftValue + rightValue) s'''
-            _                   -> failed
         ('-':s'') -> case additive s'' of
             Num rightValue s''' -> Num (leftValue - rightValue) s'''
             _                   -> failed

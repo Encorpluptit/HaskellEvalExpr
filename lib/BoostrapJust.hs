@@ -119,3 +119,21 @@ parseMany parser = Parser fct
         fct s = case runParser ((:) <$> parser <*> parseMany parser) s of
             Nothing -> Just ([], s)
             r       -> r
+
+instance Monad Parser where
+    return x = Parser $ \s -> Just (x, s)
+    Parser a >>= f = Parser fct
+        where
+            fct s = case a s of
+                Nothing -> Nothing
+                Just (x, xs) -> runParser (f x) xs
+    fail _ = Parser (\s -> Nothing)
+--                    Nothing -> Nothing
+--                    r -> r
+--                Just (x, xs) -> case runParser (f x) xs of
+--                    Nothing -> Nothing
+--                    r -> r
+
+--    Nothing >>= f = Nothing
+--    Just x >>= f  = f x
+--    fail _ = Nothing

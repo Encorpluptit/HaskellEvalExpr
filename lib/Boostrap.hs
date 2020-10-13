@@ -116,13 +116,18 @@ instance Alternative Parser where
                 Left _  -> Right ([], s)
                 r       -> r
 
+instance Monad Parser where
+    return p = Parser $ \x -> Right (p, x)
+    Parser a >>= f = Parser fct
+        where
+            fct s = case a s of
+                Right (x, xs) -> runParser (f x) xs
+                Left msg -> Left msg
+--    fail msg = Parser (\s -> Left ("Monad Parser [fail]: " ++ msg))
+
 -- https://stackoverflow.com/questions/44472008/why-is-there-no-alternative-instance-for-either-but-a-semigroup-that-behaves-sim
 -- https://gitlab.haskell.org/ghc/ghc/-/issues/9588
 -- https://gitlab.haskell.org/ghc/ghc/-/issues/12160
 -- https://gitlab.haskell.org/ghc/ghc/-/issues/9588
---instance (Monoid a)=> Alternative (Either a) where
---    empty = Left mempty
---    L
---instance Alternative Either Error where
---    empty = Left "parser Empty"
+
 -- TODO: AST
