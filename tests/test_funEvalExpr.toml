@@ -37,22 +37,22 @@ binary_path = "../funEvalExpr"
 [simple_test]
 args = ["5+6"]
 status = 0
-stdout = "11.0\n"
+stdout = "11.00\n"
 
 [with_zero_without_parenthesis]
 args = ["51297+118*31*1+0*0*0+5*6+5*0-134"]
 status = 0
-stdout = "54851.0\n"
+stdout = "54851.00\n"
 
 [with_zero_with_one_parenthesis]
 args = ["(51297+118)*31*1+0*0*0+5*6-134"]
 status = 0
-stdout = "1593761.0\n"
+stdout = "1593761.00\n"
 
 [many_zero]
 args = ["51297+118*31*1+0*0*0*0*0*0*0*0*0*0*0*0-0+0+0-134"]
 status = 0
-stdout = "54821.0\n"
+stdout = "54821.00\n"
 
 #[example_1_yvette_barack]
 #args = ["tests/examples/example", "Yvette Horner", "Barack Obama"]

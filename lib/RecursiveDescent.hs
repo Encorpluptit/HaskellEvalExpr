@@ -7,6 +7,7 @@ import Boostrap (
     Error,
     parseChar,
     parseFloat,
+    parseUFloat,
     runParser,
     parseInt)
 
@@ -22,19 +23,21 @@ import Boostrap (
 
 data Expr x = Num x String
             | Error
+            deriving (Show, Eq)
 
-evalExpr :: String -> Result Int
+evalExpr :: String -> Result Float
 evalExpr s = case additive s of
     Num v rem   -> Right (v, rem)
     _           -> error "Parse error"
 
 -- additive-precedence {+ -}
-additive :: String -> Expr Int
+additive :: String -> Expr Float
 -- Additive <- Multitive '+':'-' Additive
 additive s = case multitive s of
     Num leftValue s' -> case s' of
         ('+':s'') -> case additive s'' of
             Num rightValue s''' -> Num (leftValue + rightValue) s'''
+            _                   -> failed
         ('-':s'') -> case additive s'' of
             Num rightValue s''' -> Num (leftValue - rightValue) s'''
             _                   -> failed
@@ -48,7 +51,7 @@ additive s = case multitive s of
            Error -> Error
 
 -- multiplicative-precedence {* /}
-multitive :: String -> Expr Int
+multitive :: String -> Expr Float
 -- Multitive <- Primary '*':'/' Multitive
 multitive s = case primary s of
     Num leftValue s' -> case s' of
@@ -56,7 +59,7 @@ multitive s = case primary s of
             Num rightValue s''' -> Num (leftValue * rightValue) s'''
             _                   -> failed
         ('/':s'') -> case multitive s'' of
-            Num rightValue s''' -> Num (leftValue * rightValue) s'''
+            Num rightValue s''' -> Num (leftValue / rightValue) s'''
             _                   -> failed
         _ -> failed
     _ -> failed
@@ -68,7 +71,7 @@ multitive s = case primary s of
             Error       -> Error
 
 -- Parse a primary expression
-primary :: String -> Expr Int
+primary :: String -> Expr Float
 -- Primary <- '(' Additive ')'
 primary s = case s of
     ('(':s') -> case additive s' of
@@ -80,6 +83,6 @@ primary s = case s of
 
     where
         -- Primary <- Decimal
-        failed = case runParser parseInt s of
+        failed = case runParser parseFloat s of
             Right (a, as)    -> Num a as
             Left msg         -> Error

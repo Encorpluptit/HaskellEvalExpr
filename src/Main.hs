@@ -24,7 +24,7 @@ main = do
         (x:_) -> case evalExpr x of
 --            Right (a, [])   -> print $ show a
 --            Right (a, [])   -> printf "%.2f" a
-            Right (a, [])   -> printf "%d\n" a
+            Right (a, [])   -> printf "%.2f\n" a
             -- TODO: Remove when parsing done
             Right (a, b)    -> exit_error $ "Parsing Failed -> " ++ b
             Left msg        -> exit_error msg
