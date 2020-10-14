@@ -51,21 +51,16 @@ eval e = case e of
   Add a b   -> eval a + eval b
   Sub a b   -> eval a - eval b
   Mul a b   -> eval a * eval b
-  Div a b -> eval a / eval b
+  Div a b   -> eval a / eval b
 --  Div a b   -> eval a `div` eval b
   Num n     -> n
 
 parseExpr::Parser Expr
 parseExpr = additive
     where
---        additive = binOp Add '+' parseNum <|> parseNum
         additive = binOp Add '+' multitive <|> binOp Sub '-' multitive <|> multitive
---        additive    = binOp Add '+' multitive <|> binOp Sub '-' multitive <|> multitive
         multitive   = binOp Mul '*' factor <|> binOp Div '/' factor <|> factor
---        factor      = trace "hello" $ parens <|> parseNum
---        factor      = trace "hello" $ parens <|> parseNum
         factor      = parenthesis <|> parseNum
---        num         = trace "num" parseNum
         parenthesis = parseChar '(' *> parseExpr <* parseChar ')'
         binOp c o p = c <$> p <*> (parseChar o *> p)
 
