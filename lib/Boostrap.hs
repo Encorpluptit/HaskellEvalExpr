@@ -78,10 +78,10 @@ instance Applicative Parser where
     pure p = Parser $ \x -> Right (p, x)
 
     -- Using Applicative to apply Parser p1 AND Parser p2
-    Parser p1 <*> Parser p2 = Parser fct
+    Parser p1 <*> p2 = Parser fct
         where
             fct s = case p1 s of
-                Right (f, left) -> case p2 left of
+                Right (f, left) -> case runParser p2 left of
                     Right (a, left')  -> Right (f a, left')
                     Left msg        -> Left msg
                 Left msg -> Left msg

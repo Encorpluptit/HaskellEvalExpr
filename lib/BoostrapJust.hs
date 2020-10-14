@@ -2,26 +2,29 @@ module BoostrapJust where
 
 import Control.Applicative
 
-
+type Result a = Maybe (a , String)
 data Parser a = Parser {
-    runParser :: String -> Maybe (a , String)
+    runParser :: String -> Result a
 }
 
 parseChar :: Char -> Parser Char
 parseChar c = Parser fct
     where
         fct (x:xs)
-            | x == c    = Just (c, xs)
+            | x == c    = Just (x, xs)
             | otherwise = Nothing
         fct [] = Nothing
 
 parseDigit :: Parser Char
 parseDigit = parseAnyChar ['0'..'9']
 
+parseFloatDigit :: Parser Char
+parseFloatDigit = parseAnyChar ('.':['0'..'9'])
+
 -- Using Alternative <|> (parseOr) to parse a char or the rest of the string
 parseAnyChar :: String -> Parser Char
-parseAnyChar (a:as) = parseChar a <|> parseAnyChar as
 parseAnyChar [] = Parser (\x -> Nothing)
+parseAnyChar (a:as) = parseChar a <|> parseAnyChar as
 
 -- Using ParseAndWith with lambda (prelude possible ?) to apply both parser and get a tuple of parsed elements
 --parseAnd :: Parser a -> Parser b -> Parser (a,b)
@@ -49,6 +52,17 @@ parseInt = parseNegInt <|> parseUInt
         parseNegInt = (\x -> negate) <$> (parseChar '-') <*> parseUInt
 --        parseNegInt = fct <$> (parseChar '-') <*> parseUInt
 --        fct c = negate
+
+-- Using fmap infix notation to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
+parseUFloat :: Parser Float
+parseUFloat = (read::String->Float) <$> some parseFloatDigit
+
+-- Using Alternative Functor to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
+parseFloat :: Parser Float
+parseFloat = parseNegFloat <|> parseUFloat
+    where
+--        parseNegFloat = const negate <$> parseChar '-' <*> parseUFloat
+        parseNegFloat = (negate <$ parseChar '-') <*> parseUFloat
 
 parseSpaced :: Parser a -> Parser a
 parseSpaced p = many (parseChar ' ') *> p <* many (parseChar ' ')
@@ -85,8 +99,8 @@ instance Applicative Parser where
     pure x = Parser $ \s -> Just (x, s)
 
     -- Using Applicative to apply Parser p1 AND Parser p2
-    Parser p1 <*> Parser p2 = Parser $ \s -> case p1 s of
-        Just (f, s') -> case p2 s' of
+    Parser p1 <*> pp2 = Parser $ \s -> case p1 s of
+        Just (f, s') -> case runParser pp2 s' of
             Just (a, s'') -> Just (f a, s'')
             Nothing       -> Nothing
         Nothing -> Nothing
