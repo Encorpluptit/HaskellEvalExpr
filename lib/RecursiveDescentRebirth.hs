@@ -2,13 +2,6 @@ module RecursiveDescent where
 
 import Control.Applicative
 import Debug.Trace
---import BoostrapJust (
---    Parser,
---    parseChar,
-----    parseFloat,
-----    parseUFloat,
---    runParser,
---    parseInt)
 import Boostrap (
     Parser(..),
     Result,
@@ -47,29 +40,39 @@ parseNum = Num <$> parseFloat
 
 eval :: Expr -> Float
 eval e = case e of
-  Fail      -> 0
-  Add a b   -> eval a + eval b
-  Sub a b   -> eval a - eval b
-  Mul a b   -> eval a * eval b
-  Div a b   -> eval a / eval b
+    Fail      -> 0
+    Add a b   -> eval a + eval b
+    Sub a b   -> eval a - eval b
+    Mul a b   -> eval a * eval b
+    Div a b   -> eval a / eval b
 --  Div a b   -> eval a `div` eval b
-  Num n     -> n
+    Num n     -> n
+--eval :: Expr -> Either String Float
+--eval e = case e of
+--  Fail      -> Left "LOOOOOOOL"
+--  Add a b   -> eval a + eval b
+--  Sub a b   -> eval a - eval b
+--  Mul a b   -> eval a * eval b
+--  Div a b   -> eval a / eval b
+----  Div a b   -> eval a `div` eval b
+--  Num n     -> Right n
 
 parseExpr::Parser Expr
 parseExpr = additive
     where
-        additive = binOp Add '+' multitive <|> binOp Sub '-' multitive <|> multitive
-        multitive   = binOp Mul '*' factor <|> binOp Div '/' factor <|> factor
-        factor      = parenthesis <|> parseNum
-        parenthesis = parseChar '(' *> parseExpr <* parseChar ')'
-        binOp c o p = c <$> p <*> (parseChar o *> p)
+        additive    = applyOp Add '+' multitive <|> applyOp Sub '-' multitive <|> multitive
+        multitive   = applyOp Mul '*' factor <|> applyOp Div '/' factor <|> factor
+        factor      = primary <|> Num <$> parseFloat
+        primary     = parseChar '(' *> parseExpr <* parseChar ')'
+        applyOp c o p = c <$> p <*> (parseChar o *> p)
 
 evalExpr :: String -> Either Error Float
 --evalExpr s = eval <$> runParser parseExpr s
 evalExpr s = eval <$> fct s
     where
         fct s = case runParser parseExpr s of
-            Right (a, xs)    -> Right a
+            Right (a, [])    -> Right a
+            Right (a, xs)    -> Left $ "Parsing Failed: {Left: " ++ (show xs) ++ "}"
             Left msg         -> Left msg
 
 
