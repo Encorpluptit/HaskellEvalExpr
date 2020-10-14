@@ -57,7 +57,7 @@ test-suite funEvalExpr-test
       EvalSpec
       Paths_funEvalExpr
   hs-source-dirs:
-      tests
+      test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
 --      HUnit

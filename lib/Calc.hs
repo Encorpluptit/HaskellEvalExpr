@@ -5,6 +5,7 @@ import Control.Applicative
 data Expr = Add Expr Expr
           | Sub Expr Expr
           | Mul Expr Expr
+          | Div Expr Expr
           | Lit Float
 
 eval :: Expr -> Float
@@ -12,6 +13,7 @@ eval e = case e of
   Add a b -> eval a + eval b
   Sub a b -> eval a - eval b
   Mul a b -> eval a * eval b
+  Div a b -> eval a / eval b
   Lit n   -> n
 
 -- Nouveau datatype nécessaire pour les instances
@@ -60,7 +62,7 @@ expr :: Parser Expr
 expr = add_sub
     where
         add_sub     = binOp Add '+' mul <|> binOp Sub '-' mul <|> mul
-        mul         = binOp Mul '*' factor <|> factor
+        mul         = binOp Mul '*' factor <|> binOp Div '/' factor <|> factor
         factor      = parens <|> lit
         lit         = Lit <$> number
         parens      = char '(' *> expr <* char ')'
