@@ -11,6 +11,7 @@ import Boostrap (
     parseFloat,
     parseUFloat,
     runParser,
+    parseSpaced,
     parseInt)
 
 -- Recursive Descent
@@ -32,11 +33,11 @@ data Expr = Num Float
             | Fail
             deriving (Show, Eq)
 
-parseAdd::Parser Expr
-parseAdd = parseNum
+parseNum :: Parser Expr
+parseNum = parseChar '+' *> (Num <$> parseFloat) <|> (Num <$> parseFloat)
 
-parseNum::Parser Expr
-parseNum = Num <$> parseFloat
+parseSpacedChar :: Char -> Parser Char
+parseSpacedChar c = parseSpaced $ parseChar c
 
 eval :: Expr -> Float
 eval e = case e of
@@ -45,89 +46,21 @@ eval e = case e of
     Sub a b   -> eval a - eval b
     Mul a b   -> eval a * eval b
     Div a b   -> eval a / eval b
---  Div a b   -> eval a `div` eval b
     Num n     -> n
---eval :: Expr -> Either String Float
---eval e = case e of
---  Fail      -> Left "LOOOOOOOL"
---  Add a b   -> eval a + eval b
---  Sub a b   -> eval a - eval b
---  Mul a b   -> eval a * eval b
---  Div a b   -> eval a / eval b
-----  Div a b   -> eval a `div` eval b
---  Num n     -> Right n
 
 parseExpr::Parser Expr
 parseExpr = additive
     where
         additive    = applyOp Add '+' multitive <|> applyOp Sub '-' multitive <|> multitive
         multitive   = applyOp Mul '*' factor <|> applyOp Div '/' factor <|> factor
-        factor      = primary <|> Num <$> parseFloat
-        primary     = parseChar '(' *> parseExpr <* parseChar ')'
-        applyOp c o p = c <$> p <*> (parseChar o *> p)
+        factor      = primary <|> parseNum
+        primary     = parseSpacedChar '(' *> parseExpr <* parseSpacedChar ')'
+        applyOp c o p = c <$> p <*> (parseSpacedChar o *> p)
 
 evalExpr :: String -> Either Error Float
---evalExpr s = eval <$> runParser parseExpr s
 evalExpr s = eval <$> fct s
     where
         fct s = case runParser parseExpr s of
             Right (a, [])    -> Right a
             Right (a, xs)    -> Left $ "Parsing Failed: {Left: " ++ (show xs) ++ "}"
             Left msg         -> Left msg
-
-
---parseAdd::Parser Expr
---parseAdd = parseNum
---
---parseNum::Parser Expr
---parseNum = Num <$> parseFloat
---
---eval :: Expr -> Result Float
---eval e = case e of
---
---  Add a b -> eval a + eval b
---  Sub a b -> eval a - eval b
---  Mul a b -> eval a * eval b
---  Div a b -> eval a / eval b
-----  Num n   -> Parser n
---
---parseExpr::Parser Expr
---parseExpr = additive
---    where
---        additive    = binOp Add '+' multitive <|> binOp Sub '-' multitive <|> multitive
---        multitive   = binOp Mul '*' factor <|> binOp Div '/' factor <|> factor
---        factor      = parens <|> lit
---        lit         = parseNum
---        parens      = parseChar '(' *> parseExpr <* parseChar ')'
---        binOp c o p = c <$> p <*> (parseChar o *> p)
---
---evalExpr :: String -> Float
---evalExpr s = eval <$> runParser parseExpr s
-
---parseExpr :: Parser Expr
---parseExpr = additive
---    where
---        additive    = fail
-----        additive    = binOp Add '+' additive <|> fail
-----        additive    = binOp Add '+' additive <|> binOp Sub '-' additive <|> fail
---        fail        = Parser (\x -> Left "NoParse")
-----        factor      = parenthesis <|> parseNum
-----        factor      = (Num <$> parseFloat) <|> fail
-----        factor      = (Num <$> parseFloat)
---        binOp c o p = c <$> p <*> (parseChar o *> p)
---
---eval :: Expr -> Float
---eval e = case e of
---  Add a b -> eval a + eval b
---  Sub a b -> eval a - eval b
---  Mul a b -> eval a * eval b
---  Div a b -> eval a / eval b
---  Num n   -> n
---
---evalExpr :: String -> Either String Float
-----evalExpr s = eval <$> runParser parseExpr s
---evalExpr s = eval <$> fct
---    where
---        fct = case runParser parseExpr s of
---            Right (x, xs)   -> Right x
---            Left _          -> Left "failed here"
