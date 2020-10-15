@@ -29,8 +29,8 @@ parseAnyChar :: String -> Parser Char
 --parseAnyChar (a:as) = parseChar a <|> parseAnyChar as
 --parseAnyChar [] = Parser (\x -> Left "ParseAnyChar failed: Empty or End of List")
 --parseAnyChar as = foldr ((<|>) . parseChar) fail as
-parseAnyChar = foldr ((<|>) . parseChar) fail
-    where fail = Parser (\ x -> Left "ParseAnyChar failed: Empty or End of List")
+parseAnyChar = foldr ((<|>) . parseChar) failed
+    where failed = Parser (\ _ -> Left "ParseAnyChar failed: Empty or End of List")
 
 -- Using fmap infix notation to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
 parseUInt :: Parser Int
@@ -60,7 +60,7 @@ parseSpaced p = many (parseChar ' ') *> p <* many (parseChar ' ')
 parseTuple :: Parser a -> Parser (a, a)
 parseTuple p = openPar *> parseTuple' <* closePar
     where
-        parseTuple'     = parseElem <|> Parser (\x -> Left "Parsing Tuple Failed")
+        parseTuple'     = parseElem <|> Parser (\_ -> Left "Parsing Tuple Failed")
         parseElem       = (\x y -> (x, y)) <$> p <*> (comma *> p)
         openPar         = parseSpaced $ parseChar '('
         closePar        = parseSpaced $ parseChar ')'
