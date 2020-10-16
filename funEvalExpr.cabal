@@ -29,6 +29,7 @@ library
   exposed-modules:
       Boostrap
       RecursiveDescent
+      RecursiveDescentRebirth
   other-modules:
       Paths_funEvalExpr
   hs-source-dirs:

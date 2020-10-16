@@ -1,4 +1,4 @@
-module RecursiveDescent where
+module RecursiveDescentRebirth where
 
 import Control.Applicative
 import Debug.Trace
@@ -34,16 +34,17 @@ data Expr = Number Float
             deriving (Show, Eq, Ord)
 
 parseNum :: Parser Expr
-parseNum = parseChar '+' *> (Number <$> parseFloat) <|> (Number <$> parseFloat)
+parseNum =  (Number <$> parseFloat)
+--parseNum = parseChar '+' *> (Number <$> parseFloat) <|> (Number <$> parseFloat)
 
 eval :: Expr -> Either String Float
 eval e = case e of
-    Fail      -> Left "LOOOOOOOL"
     Add a b   -> fct a b (+)
     Sub a b   -> fct a b (-)
     Mul a b   -> fct a b (*)
     Div a b   -> fct a b (/)
     Number n  -> Right n
+    Fail      -> Left "LOOOOOOOL"
     where
         fct a b op = case eval a of
             Right x -> case eval b of
@@ -64,7 +65,6 @@ parseExpr = additive
         applyOp c o p = c <$> p <*> (parseSpacedChar o *> p)
 
 evalExpr :: String -> Either Error Float
---evalExpr s = eval <$> runParser parseExpr s
 evalExpr s = case eval <$> fct s of
         Right a     -> a
         Left msg    -> Left msg
