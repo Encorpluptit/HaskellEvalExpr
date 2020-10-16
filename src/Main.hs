@@ -4,6 +4,7 @@ import System.Environment (getArgs)
 import System.Exit
 import System.IO
 import Text.Printf
+import RecursiveDescentRebirth
 
 write_error :: String -> IO ()
 write_error str = hPutStrLn stderr ("Error : " ++ str)

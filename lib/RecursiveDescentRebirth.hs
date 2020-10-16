@@ -34,8 +34,8 @@ data Expr = Number Float
             deriving (Show, Eq, Ord)
 
 parseNum :: Parser Expr
-parseNum =  (Number <$> parseFloat)
---parseNum = parseChar '+' *> (Number <$> parseFloat) <|> (Number <$> parseFloat)
+--parseNum =  (Number <$> parseFloat)
+parseNum = parseChar '+' *> (Number <$> parseFloat) <|> (Number <$> parseFloat)
 
 eval :: Expr -> Either String Float
 eval e = case e of
@@ -58,11 +58,11 @@ parseSpacedChar c = parseSpaced $ parseChar c
 parseExpr::Parser Expr
 parseExpr = additive
     where
-        additive    = applyOp Add '+' multitive <|> applyOp Sub '-' multitive <|> multitive
-        multitive   = applyOp Mul '*' factor <|> applyOp Div '/' factor <|> factor
+        additive    = applyOp Add '+' multitive additive <|> applyOp Sub '-' multitive additive <|> multitive
+        multitive   = applyOp Mul '*' factor additive <|> applyOp Div '/' factor additive <|> factor
         factor      = primary <|> parseNum
         primary     = parseSpacedChar '(' *> parseExpr <* parseSpacedChar ')'
-        applyOp c o p = c <$> p <*> (parseSpacedChar o *> p)
+        applyOp c o p1 p2 = c <$> p1 <*> (parseSpacedChar o *> p2)
 
 evalExpr :: String -> Either Error Float
 evalExpr s = case eval <$> fct s of

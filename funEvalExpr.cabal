@@ -30,6 +30,7 @@ library
       Boostrap
       RecursiveDescent
       RecursiveDescentRebirth
+      CleanStr
   other-modules:
       Paths_funEvalExpr
   hs-source-dirs:
