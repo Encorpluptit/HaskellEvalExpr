@@ -1,12 +1,25 @@
 module Calc where
 
 import Control.Applicative
+import BootstrapJust
+import Debug.Trace
+import Control.Monad
 
 data Expr = Add Expr Expr
           | Sub Expr Expr
           | Mul Expr Expr
           | Div Expr Expr
-          | Lit Float
+          | Number Float
+          | Fail String
+
+
+parseSpacedChar :: Char -> Parser Char
+parseSpacedChar c = parseSpaced $ parseChar c
+
+parseNum :: Parser Expr
+--parseNum =  (Number <$> parseFloat)
+parseNum = parseChar '+' *> (Number <$> parseFloat) <|> (Number <$> parseFloat)
+
 
 eval :: Expr -> Float
 eval e = case e of
@@ -14,60 +27,105 @@ eval e = case e of
   Sub a b -> eval a - eval b
   Mul a b -> eval a * eval b
   Div a b -> eval a / eval b
-  Lit n   -> n
+  Number n   -> n
+  Fail s -> error s
 
--- Nouveau datatype nécessaire pour les instances
-data Parser r = Parser {parse :: String -> Maybe (r, String)}
 
--- Instances
-instance Functor Parser where
-  fmap f (Parser p) = Parser $ \s -> case p s of
-    Just (a, s') -> Just (f a, s')
-    Nothing      -> Nothing
+--routine ::Expr->Maybe Expr
+--routine = do
+--    first <- landLeft 2 start
+--    second <- landRight 2 first
+--    landLeft 1 second
+type Birds = Int
+type Pole = (Birds,Birds)
 
-instance Applicative Parser where
-    pure x = Parser $ \s -> Just (x, s)
-    Parser p1 <*> pp2 = Parser $ \s -> case p1 s of
-        Just (f, s') -> case parse pp2 s' of
-            Just (a, s'') -> Just (f a, s'')
-            Nothing       -> Nothing
-        Nothing -> Nothing
+showPole:: Pole -> String
+showPole (a, b) = (show a) ++ "|" ++ (show b)
 
-instance Alternative Parser where
-  empty = Parser $ const Nothing
-  (Parser p1) <|> pp2 = Parser $ \s -> p1 s <|> parse pp2 s
+routine :: Pole -> Maybe Pole
+routine x = do
+    case trace (showPole x) (landLeft 1 x) of
+        Just (a, b) -> return (a, b) >>= routine
+        Nothing -> Just x
 
--- Le reste est identique
-runParser :: Parser a -> String -> Maybe a
-runParser (Parser p) s = case p s of
-  Just (r, "") -> Just r
-  _            -> Nothing
 
-check :: (Char -> Bool) -> Parser Char
-check f = Parser $ \s -> case s of
-  (x:xs) | f x -> Just (x, xs)
-  _            -> Nothing
+landLeft :: Birds -> Pole -> Maybe Pole
+landLeft n (left,right)
+    | abs ((left + n) - right) < 4 = Just (left + n, right)
+    | otherwise                    = Nothing
 
-char :: Char -> Parser Char
-char c = check (== c)
+landRight :: Birds -> Pole -> Maybe Pole
+landRight n (left,right)
+    | abs (left - (right + n)) < 4 = Just (left, right + n)
+    | otherwise                    = Nothing
 
-oneOf :: [Char] -> Parser Char
-oneOf cs = check (\c -> elem c cs)
+--additive :: Parser
 
-number :: Parser Float
-number = read <$> some digit
-  where digit = oneOf "0123456789"
+--        add         = op Add '+' mul add <|> op Sub '-' mul add <|> mul
+--        mul         = op Mul '*' factor mul <|> op Div '/' factor mul <|> factor
+--        factor      = parens <|> parseNum
+
+additive :: Parser Expr
+--additive = op Add '+' multiply additive <|> op Sub '-' multiply additive <|> multiply
+additive = op Add '+' multiply additive <|> op Sub '-' multiply additive <|> multiply
+
+multiply :: Parser Expr
+multiply = op Mul '*' factor multiply <|> op Div '/' factor multiply <|> factor
+
+factor :: Parser Expr
+factor = parenthesis <|> parseNum
+
+parenthesis :: Parser Expr
+parenthesis = parseSpacedChar '(' *> expr <* parseSpacedChar ')'
+
+op :: (Expr -> Expr -> Expr) -> Char -> Parser Expr -> Parser Expr -> Parser Expr
+op c o p1 p2 = c <$> (p1 <|> p1)<*> (parseSpacedChar o *> p2)
+
+--parseMany :: Parser a -> Parser [a]
+--parseMany parser = Parser fct
+--    where
+--        fct s = case runParser ((:) <$> parser <*> parseMany parser) s of
+--            Nothing -> Just ([], s)
+--            r       -> r
+
+--parseNegExpr :: Parser Expr -> Parser Expr ->Parser Expr
+--parseNegExpr x  = return x >>= (+2)
+--parseNegExpr :: Parser Expr -> Parser Expr
+--parseNegExpr parser = Parser fct
+--      where
+--          fct s = case runParser (msum ((:) <$> parser <*> parseMany parser)) s of
+--              Nothing -> Just (0, s)
+--              r       -> r
+
+--routine2 :: Parser Expr -> Parser Expr
+--routine2 x = Parser fct
+--    where
+--        fct s = case trace (showPole x) (landLeft 1 x) of
+--        case trace (showPole x) (landLeft 1 x) of
+--            Just (a, b) -> return (a, b) >>= routine2
+--            Nothing -> Just x
+--
+--parseNegExpr :: Parser Expr
+--parseNegExpr = Parser fct
+--    where
+--        fct s = case runParser (op Sub '-' multiply additive) s of
+--             Nothing -> return
+----             Nothing -> Parser $ const Nothing
+--             Just (a, as) -> parseNegExpr
 
 expr :: Parser Expr
-expr = add_sub
+expr = additive
     where
-        add_sub     = binOp Add '+' mul <|> binOp Sub '-' mul <|> mul
-        mul         = binOp Mul '*' factor <|> binOp Div '/' factor <|> factor
-        factor      = parens <|> lit
-        lit         = Lit <$> number
-        parens      = char '(' *> expr <* char ')'
-        binOp c o p = c <$> p <*> (char o *> p)
+--        add         = op Add '+' mul add <|> (mul >>= (\x -> neg x)) <|> mul
+--        add         = op Add '+' mul add <|> op Sub '-' mul add <|> mul
+        add         = op Add '+' mul add <|> neg (neg (neg mul)) <|> mul
+        mul         = op Mul '*' factor mul <|> op Div '/' factor mul <|> factor
+        factor      = parens <|> parseNum
+        parens      = parseSpacedChar '(' *> expr <* parseSpacedChar ')'
+        op c o p1 p2 = c <$> p1 <*> (parseSpacedChar o *> p2)
+        neg a = Sub <$> a <*> (parseSpacedChar '-' *> add)
 
 evalExpr :: String -> Maybe Float
-evalExpr s = eval <$> runParser expr s
---evalExpr s = (fmap eval) $ runParser expr s
+evalExpr s = eval <$> case runParser expr s of
+    Just (a, xs) -> Just a
+    Nothing -> Nothing

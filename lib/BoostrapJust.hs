@@ -1,6 +1,7 @@
-module BoostrapJust where
+module BootstrapJust where
 
 import Control.Applicative
+import Control.Monad
 
 type Result a = Maybe (a , String)
 data Parser a = Parser {
@@ -142,6 +143,23 @@ instance Monad Parser where
                 Nothing -> Nothing
                 Just (x, xs) -> runParser (f x) xs
     fail _ = Parser (\s -> Nothing)
+
+instance MonadPlus Parser where
+    mzero             = Parser (\s -> Nothing)
+--    Nothing `mplus` x = x
+--    x `mplus` _       = x
+----------
+--    Parser p1 <*> pp2 = Parser $ \s -> case p1 s of
+--        Just (f, s') -> case runParser pp2 s' of
+--            Just (a, s'') -> Just (f a, s'')
+--            Nothing       -> Nothing
+--        Nothing -> Nothing
+----------
+--    Parser p1 `mplus` pp2 = Parser $ \s -> case p1 s of
+--        Just (f, s') -> (Parser p1) `mplus` pp2
+--        Nothing -> (Parser pp2)
+--    x `mplus` _       = x
+----------
 --                    Nothing -> Nothing
 --                    r -> r
 --                Just (x, xs) -> case runParser (f x) xs of

@@ -1,6 +1,7 @@
 module Calc where
 
 import Control.Applicative
+import Debug.Trace
 
 data Expr = Add Expr Expr
           | Sub Expr Expr
