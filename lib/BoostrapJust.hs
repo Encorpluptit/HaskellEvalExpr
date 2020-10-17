@@ -27,20 +27,6 @@ parseAnyChar :: String -> Parser Char
 parseAnyChar [] = Parser (\x -> Nothing)
 parseAnyChar (a:as) = parseChar a <|> parseAnyChar as
 
--- Using ParseAndWith with lambda (prelude possible ?) to apply both parser and get a tuple of parsed elements
---parseAnd :: Parser a -> Parser b -> Parser (a,b)
---parseAnd = parseAndWith (\x y -> (x,y))
---parseAnd p1 p2 = (\x y -> (x,y)) <$> p1 <*> p2
-
-
--- Using fmap infix notation to parse with the fct contained in Parser a and apply (:) to the tuple returned by parseAnd
--- uncurry -> fct that take 2 args (a fct with 2 params and a tuple) to and apply this fct with the elems of this tuple as args of the fct.
--- uncurry :: (a -> b -> c) -> (a, b) -> c
--- Here unpack the tuple (a,b) and apply the fct a -> b -> c with a first arg and b second arg
--- See Functor (fmap)
---parseSome :: Parser a -> Parser [a]
---parseSome parser = uncurry (:) <$> parseAnd parser (parseMany parser)
-
 
 -- Using fmap infix notation to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
 parseUInt :: Parser Int
@@ -68,33 +54,26 @@ parseFloat = parseNegFloat <|> parseUFloat
 parseSpaced :: Parser a -> Parser a
 parseSpaced p = many (parseChar ' ') *> p <* many (parseChar ' ')
 
+parseSpacedChar :: Char -> Parser Char
+parseSpacedChar c = parseSpaced $ parseChar c
+
 parseTuple :: Parser a -> Parser (a, a)
 parseTuple p = openPar *> parseTuple' <* closePar
     where
         parseTuple'     = parseElem <|> Parser (\x -> Nothing)
---        parseElem       = (\x y -> (x, y)) <$> p <*> (parseChar ',' *> p)
-        parseElem       = (\x y -> (x, y)) <$> p <*> (comma *> p)
-        openPar         = parseSpaced $ parseChar '('
-        closePar        = parseSpaced $ parseChar ')'
-        comma           = parseSpaced $ parseChar ','
-
---parseTuple p s =
---    case begin p s of
---        Right (a, s') -> case middle p s' of
---            Right (b, s'') -> Right ((a, b), s'')
---            Left _ -> Left $ "Failed at second number: " ++ s'
---        Left _ -> Left $ "Failed at first number: " ++ s
---    where
---        begin       = ignore (parseChar '(')
---        middle p    = ignore (parseChar ',') (end p)
---        end p       = parseAndWith const p (parseChar ')')
---        ignore p1 p2 = parseAndWith seq p1 p2
-
+        parseElem       = (\x y -> (x, y)) <$> p <*> comma
+        openPar         = parseSpacedChar '('
+        closePar        = parseSpacedChar ')'
+        comma           = parseSpacedChar ',' *> p
 
 instance Functor Parser where
     fmap f (Parser p) = Parser $ \s -> case p s of
         Just (a, s') -> Just (f a, s')
         Nothing      -> Nothing
+
+--------------------------------------------------------------------------------
+--- Applicative Functor: implement pure and
+--------------------------------------------------------------------------------
 
 instance Applicative Parser where
     pure x = Parser $ \s -> Just (x, s)
@@ -105,6 +84,16 @@ instance Applicative Parser where
             Just (a, s'') -> Just (f a, s'')
             Nothing       -> Nothing
         Nothing -> Nothing
+
+
+-- | -----------------------------------------------------------------------------
+-- Alternative Functor:
+-- Implement:
+--      - empty
+--      - <|>
+--      - some
+--      - many
+-- | -----------------------------------------------------------------------------
 
 instance Alternative Parser where
     empty = Parser $ const Nothing
@@ -117,8 +106,6 @@ instance Alternative Parser where
     -- uncurry :: (a -> b -> c) -> (a, b) -> c
     -- Here unpack the tuple (a,b) and apply the fct a -> b -> c with a first arg and b second arg
     -- See Functor (fmap)
---    some parser = uncurry (:) <$> parseAnd parser (parseMany parser)
---    some parser = uncurry (:) <$> ((\x y -> (x,y)) <$> parser <*> parseMany parser)
     some parser = uncurry (:) <$> fct
         where
             fct = (\x y -> (x,y)) <$> parser <*> parseMany parser
@@ -135,6 +122,14 @@ parseMany parser = Parser fct
             Nothing -> Just ([], s)
             r       -> r
 
+-- | -----------------------------------------------------------------------------
+-- Monad Parser
+-- Implement:
+--      - Bind Operator: to work with contexts (here Maybe)
+--      - Return: Same as Pure, return the monadic Value
+--      - Fail: Message in case of Fail Message
+-- | -----------------------------------------------------------------------------
+
 instance Monad Parser where
     return x = Parser $ \s -> Just (x, s)
     Parser a >>= f = Parser fct
@@ -144,28 +139,19 @@ instance Monad Parser where
                 Just (x, xs) -> runParser (f x) xs
     fail _ = Parser (\s -> Nothing)
 
+
+
+-- | -----------------------------------------------------------------------------
+-- Once Monad is implemented, We can rewrite our Functor like this
+-- | -----------------------------------------------------------------------------
+
+--instance Functor Parser where
+--    fmap f p = do x<-p; return (f x)
+--
+--instance Applicative Parser where
+--    pure = return
+--    p1 <*> p2 = do x<-p1; y<-p2; return (x y)
+
+
 instance MonadPlus Parser where
     mzero             = Parser (\s -> Nothing)
---    Nothing `mplus` x = x
---    x `mplus` _       = x
-----------
---    Parser p1 <*> pp2 = Parser $ \s -> case p1 s of
---        Just (f, s') -> case runParser pp2 s' of
---            Just (a, s'') -> Just (f a, s'')
---            Nothing       -> Nothing
---        Nothing -> Nothing
-----------
---    Parser p1 `mplus` pp2 = Parser $ \s -> case p1 s of
---        Just (f, s') -> (Parser p1) `mplus` pp2
---        Nothing -> (Parser pp2)
---    x `mplus` _       = x
-----------
---                    Nothing -> Nothing
---                    r -> r
---                Just (x, xs) -> case runParser (f x) xs of
---                    Nothing -> Nothing
---                    r -> r
-
---    Nothing >>= f = Nothing
---    Just x >>= f  = f x
---    fail _ = Nothing
