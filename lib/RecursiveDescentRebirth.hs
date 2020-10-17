@@ -2,7 +2,7 @@ module RecursiveDescentRebirth where
 
 import Control.Applicative
 import Debug.Trace
-import Boostrap (
+import Bootstrap (
     Parser(..),
     Result,
     Error,
@@ -61,7 +61,7 @@ parseExpr = additive
 --        additive    = applyOp Add '+' multitive additive <|> neg (neg (neg multitive additive) parseNum) parseNum <|> multitive
 --        additive    = applyOp Add '+' multitive additive <|> neg (neg (neg multitive Sub) Sub) Sub <|> multitive
 --        additive    = applyOp Add '+' multitive additive <|> neg (neg (neg multitive)) <|> multitive
-        additive    = applyOp Add '+' multitive additive <|> (neg multitive >>= (\x -> neg x)) <|> multitive
+        additive    = applyOp Add '+' multitive additive <|> (neg multitive >>= (\x -> multitive)) <|> multitive
         multitive   = applyOp Mul '*' factor multitive <|> applyOp Div '/' factor multitive <|> factor
         factor      = primary <|> parseNum
         primary     = parseSpacedChar '(' *> parseExpr <* parseSpacedChar ')'

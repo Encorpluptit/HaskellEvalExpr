@@ -24,9 +24,9 @@ parseFloatDigit = parseAnyChar ('.':['0'..'9'])
 
 -- Using Alternative <|> (parseOr) to parse a char or the rest of the string
 parseAnyChar :: String -> Parser Char
-parseAnyChar [] = Parser (\x -> Nothing)
+--parseAnyChar [] = Parser (\x -> Nothing)
+parseAnyChar [] = empty
 parseAnyChar (a:as) = parseChar a <|> parseAnyChar as
-
 
 -- Using fmap infix notation to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
 parseUInt :: Parser Int
@@ -67,7 +67,8 @@ parseSpacedChar c = parseSpaced $ parseChar c
 parseTuple :: Parser a -> Parser (a, a)
 parseTuple p = openPar *> parseTuple' <* closePar
     where
-        parseTuple'     = parseElem <|> Parser (\x -> Nothing)
+--        parseTuple'     = parseElem <|> Parser (\x -> Nothing)
+        parseTuple'     = parseElem <|> empty
         parseElem       = (\x y -> (x, y)) <$> p <*> comma
         openPar         = parseSpacedChar '('
         closePar        = parseSpacedChar ')'
@@ -113,11 +114,11 @@ instance Alternative Parser where
     -- uncurry :: (a -> b -> c) -> (a, b) -> c
     -- Here unpack the tuple (a,b) and apply the fct a -> b -> c with a first arg and b second arg
     -- See Functor (fmap)
-    some parser = uncurry (:) <$> fct
-        where
-            fct = (\x y -> (x,y)) <$> parser <*> parseMany parser
-
-    many  = parseMany
+--    some parser = uncurry (:) <$> fct
+--        where
+--            fct = (\x y -> (x,y)) <$> parser <*> parseMany parser
+--
+--    many  = parseMany
 
 -- Using recursive to parse with Parser a and adding each parsed element to a list of parsed elements
 -- (:) -> fct that take 2 args (an elem and a list) and prepend (insert before) that elem to the list.
