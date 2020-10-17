@@ -1,4 +1,4 @@
-module Boostrap where
+module Bootstrap where
 
 import Data.Either
 import Control.Applicative

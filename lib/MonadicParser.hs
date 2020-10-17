@@ -5,7 +5,10 @@ import BootstrapJust
 
 --------
 
-additive :: Parser (Int -> Int -> Int)
+parseNum :: Parser Float
+parseNum = parseChar '+' *> parseFloat <|> parseFloat
+
+additive :: Parser (Float -> Float -> Float)
 additive = do
     parseChar '+'
     return (+)
@@ -13,22 +16,22 @@ additive = do
     parseChar '-'
     return (-)
 
-multitive :: Parser (Int -> Int -> Int)
+multitive :: Parser (Float -> Float -> Float)
 multitive = do
     parseChar '*'
     return (*)
     <|> do
     parseChar '/'
-    return div
+    return (/)
 
-expr :: Parser Int
+expr :: Parser Float
 expr  = term `chainLeftAssociative'` additive
 
-term :: Parser Int
+term :: Parser Float
 term = factor `chainLeftAssociative'` multitive
 
-factor :: Parser Int
-factor = parseInt <|>  parens expr
+factor :: Parser Float
+factor = parseNum <|>  parens expr
 
 parens :: Parser a -> Parser a
 parens p = do
@@ -47,3 +50,6 @@ chainLeftAssociative' p op = do x <- p; fct x
                    b <- p
                    fct (f x b)
                 <|> return x
+
+evalExpr :: String -> Result Float
+evalExpr s = runParser expr s

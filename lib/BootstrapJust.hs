@@ -137,7 +137,7 @@ instance Monad Parser where
             fct s = case a s of
                 Nothing -> Nothing
                 Just (x, xs) -> runParser (f x) xs
-    fail _ = Parser (\s -> Nothing)
+--    fail _ = Parser (\s -> Nothing)
 
 
 
