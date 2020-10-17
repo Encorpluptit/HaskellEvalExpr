@@ -69,7 +69,7 @@ dev-deps:
 	stack install ghcid
 
 tests_run: test
-	tests/jenrik tests/test_funEvalExpr.toml
+	test/jenrik test/test_funEvalExpr.toml
 
 sign:
 	@echo ""
