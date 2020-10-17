@@ -66,24 +66,24 @@ parseTuple p = openPar *> parseTuple' <* closePar
         closePar        = parseSpacedChar ')'
         comma           = parseSpacedChar ',' *> p
 
-instance Functor Parser where
-    fmap f (Parser p) = Parser $ \s -> case p s of
-        Just (a, s') -> Just (f a, s')
-        Nothing      -> Nothing
+--instance Functor Parser where
+--    fmap f (Parser p) = Parser $ \s -> case p s of
+--        Just (a, s') -> Just (f a, s')
+--        Nothing      -> Nothing
 
 --------------------------------------------------------------------------------
 --- Applicative Functor: implement pure and
 --------------------------------------------------------------------------------
 
-instance Applicative Parser where
-    pure x = Parser $ \s -> Just (x, s)
-
-    -- Using Applicative to apply Parser p1 AND Parser p2
-    Parser p1 <*> pp2 = Parser $ \s -> case p1 s of
-        Just (f, s') -> case runParser pp2 s' of
-            Just (a, s'') -> Just (f a, s'')
-            Nothing       -> Nothing
-        Nothing -> Nothing
+--instance Applicative Parser where
+--    pure x = Parser $ \s -> Just (x, s)
+--
+--    -- Using Applicative to apply Parser p1 AND Parser p2
+--    Parser p1 <*> pp2 = Parser $ \s -> case p1 s of
+--        Just (f, s') -> case runParser pp2 s' of
+--            Just (a, s'') -> Just (f a, s'')
+--            Nothing       -> Nothing
+--        Nothing -> Nothing
 
 
 -- | -----------------------------------------------------------------------------
@@ -145,13 +145,13 @@ instance Monad Parser where
 -- Once Monad is implemented, We can rewrite our Functor like this
 -- | -----------------------------------------------------------------------------
 
---instance Functor Parser where
---    fmap f p = do x<-p; return (f x)
---
---instance Applicative Parser where
---    pure = return
---    p1 <*> p2 = do x<-p1; y<-p2; return (x y)
+instance Functor Parser where
+    fmap f p = do x<-p; return (f x)
+
+instance Applicative Parser where
+    pure = return
+    p1 <*> p2 = do x<-p1; y<-p2; return (x y)
 
 
-instance MonadPlus Parser where
-    mzero             = Parser (\s -> Nothing)
+--instance MonadPlus Parser where
+--    mzero             = Parser (\s -> Nothing)

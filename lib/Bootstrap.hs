@@ -129,5 +129,3 @@ instance Monad Parser where
 -- https://gitlab.haskell.org/ghc/ghc/-/issues/9588
 -- https://gitlab.haskell.org/ghc/ghc/-/issues/12160
 -- https://gitlab.haskell.org/ghc/ghc/-/issues/9588
-
--- TODO: AST
