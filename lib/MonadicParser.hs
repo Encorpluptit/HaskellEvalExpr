@@ -51,5 +51,8 @@ chainLeftAssociative' p op = do x <- p; fct x
                    fct (f x b)
                 <|> return x
 
-evalExpr :: String -> Result Float
-evalExpr s = runParser expr s
+evalExpr :: String -> Maybe Float
+evalExpr s = case runParser expr s of
+    Just (a, [])    -> Just a
+    _               -> Nothing
+
