@@ -11,6 +11,7 @@ data Expr = Add Expr Expr
           | Div Expr Expr
           | Number Float
           | Fail String
+          deriving (Show, Eq)
 
 
 parseSpacedChar :: Char -> Parser Char
@@ -65,21 +66,42 @@ landRight n (left,right)
 --        mul         = op Mul '*' factor mul <|> op Div '/' factor mul <|> factor
 --        factor      = parens <|> parseNum
 
-additive :: Parser Expr
+--additive :: Parser Expr
+----additive = op Add '+' multiply additive <|> op Sub '-' multiply additive <|> multiply
 --additive = op Add '+' multiply additive <|> op Sub '-' multiply additive <|> multiply
-additive = op Add '+' multiply additive <|> op Sub '-' multiply additive <|> multiply
+--
+--multiply :: Parser Expr
+--multiply = op Mul '*' factor multiply <|> op Div '/' factor multiply <|> factor
+--
+--factor :: Parser Expr
+--factor = parenthesis <|> parseNum
+--
+--parenthesis :: Parser Expr
+--parenthesis = parseSpacedChar '(' *> expr <* parseSpacedChar ')'
 
-multiply :: Parser Expr
-multiply = op Mul '*' factor multiply <|> op Div '/' factor multiply <|> factor
+-- GOOD OMFG
+--opNeg :: (Expr -> Expr -> Expr) -> Char -> Parser Expr -> Parser Expr -> Parser Expr
+--opNeg c o p1 p2 = c <$> fct <*> (parseSpacedChar o *> p2)
+--    where
+--        fct = (p1 >>= (\x -> multiply))
 
-factor :: Parser Expr
-factor = parenthesis <|> parseNum
-
-parenthesis :: Parser Expr
-parenthesis = parseSpacedChar '(' *> expr <* parseSpacedChar ')'
 
 op :: (Expr -> Expr -> Expr) -> Char -> Parser Expr -> Parser Expr -> Parser Expr
-op c o p1 p2 = c <$> (p1 <|> p1)<*> (parseSpacedChar o *> p2)
+op c o p1 p2 = c <$> p1 <*> (parseSpacedChar o *> p2)
+
+run :: Parser a -> String -> Maybe a
+run (Parser p) str = case p str of
+    Just (a, "") -> trace (show (evalExpr str)) Just a
+    _            -> Nothing
+
+
+--expr :: Parser Integer
+--expr = do t <- term; cont t
+--  where
+--  cont t1 = do op <- addop
+--               t2 <- term
+--               cont (t1 `op` t2)
+--            <|> return t1
 
 --parseMany :: Parser a -> Parser [a]
 --parseMany parser = Parser fct
