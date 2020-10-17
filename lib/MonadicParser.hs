@@ -24,7 +24,7 @@ instance Functor Parser where
 
 instance Applicative Parser where
     pure = return
-    p <*> q = do f<-p; x<-q; return (f x)
+    p1 <*> p2 = do x<-p1; y<-p2; return (x y)
 
 instance Alternative Parser where
 --    empty = Parser $ const Nothing
@@ -49,3 +49,89 @@ many' p = do { a<-p; as<-many p; return (a:as) }
 
 (+++) :: Parser a -> Parser a -> Parser a
 p +++ q = Parser (\cs -> runParser p cs ++ runParser q cs)
+
+
+
+--parseChar :: Char -> Parser Char
+--parseChar c = Parser fct
+--    where
+--        fct (x:xs)
+--            | x == c    = Just (x, xs)
+--            | otherwise = Nothing
+--        fct [] = Nothing
+
+parseChar :: Char -> Parser Char
+parseChar c = Parser fct
+    where
+        fct (x:xs)
+            | x == c    = [(x, xs)]
+            | otherwise = []
+        fct [] = []
+
+--parseAnyChar :: String -> Parser Char
+--parseAnyChar [] = Parser (\x -> Nothing)
+--parseAnyChar (a:as) = parseChar a <|> parseAnyChar as
+
+parseAnyChar :: String -> Parser Char
+parseAnyChar [] = Parser (\x -> [])
+parseAnyChar (a:as) = parseChar a <|> parseAnyChar as
+
+parseDigit :: Parser Char
+parseDigit = parseAnyChar ['0'..'9']
+
+
+-- Using fmap infix notation to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
+parseUInt :: Parser Int
+parseUInt = read <$> some parseDigit
+
+-- Using Alternative Functor to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
+parseInt :: Parser Int
+parseInt = parseNegInt <|> parseUInt
+    where
+        parseNegInt = (\x -> negate) <$> (parseChar '-') <*> parseUInt
+
+
+--------
+
+additive :: Parser (Int -> Int -> Int)
+additive = do
+    parseChar '+'
+    return (+)
+    <|> do
+    parseChar '-'
+    return (-)
+
+multitive :: Parser (Int -> Int -> Int)
+multitive = do
+    parseChar '*'
+    return (*)
+    <|> do
+    parseChar '/'
+    return div
+
+expr :: Parser Int
+expr  = term `chainLeftAssociative'` additive
+
+term :: Parser Int
+term = factor `chainLeftAssociative'` multitive
+
+factor :: Parser Int
+factor = parseInt <|>  parens expr
+
+parens :: Parser a -> Parser a
+parens p = do
+    parseChar '('
+    a <- p
+    parseChar ')'
+    return a
+
+chainLeftAssociative :: Parser a -> Parser (a -> a -> a) -> a -> Parser a
+chainLeftAssociative p op a = (p `chainLeftAssociative'` op) <|> return a
+
+chainLeftAssociative' :: Parser a -> Parser (a -> a -> a) -> Parser a
+chainLeftAssociative' p op = do x <- p; fct x
+    where
+        fct x = do f <- op
+                   b <- p
+                   fct (f x b)
+                <|> return x
