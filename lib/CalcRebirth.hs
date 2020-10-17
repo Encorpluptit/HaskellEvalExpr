@@ -14,9 +14,6 @@ data Expr = Add Expr Expr
           deriving (Show, Eq)
 
 
-parseSpacedChar :: Char -> Parser Char
-parseSpacedChar c = parseSpaced $ parseChar c
-
 parseNum :: Parser Expr
 --parseNum =  (Number <$> parseFloat)
 parseNum = parseChar '+' *> (Number <$> parseFloat) <|> (Number <$> parseFloat)
@@ -32,58 +29,36 @@ eval e = case e of
   Fail s -> error s
 
 
---routine ::Expr->Maybe Expr
---routine = do
---    first <- landLeft 2 start
---    second <- landRight 2 first
---    landLeft 1 second
-type Birds = Int
-type Pole = (Birds,Birds)
-
-showPole:: Pole -> String
-showPole (a, b) = (show a) ++ "|" ++ (show b)
-
-routine :: Pole -> Maybe Pole
-routine x = do
-    case trace (showPole x) (landLeft 1 x) of
-        Just (a, b) -> return (a, b) >>= routine
-        Nothing -> Just x
-
-
-landLeft :: Birds -> Pole -> Maybe Pole
-landLeft n (left,right)
-    | abs ((left + n) - right) < 4 = Just (left + n, right)
-    | otherwise                    = Nothing
-
-landRight :: Birds -> Pole -> Maybe Pole
-landRight n (left,right)
-    | abs (left - (right + n)) < 4 = Just (left, right + n)
-    | otherwise                    = Nothing
-
---additive :: Parser
-
---        add         = op Add '+' mul add <|> op Sub '-' mul add <|> mul
---        mul         = op Mul '*' factor mul <|> op Div '/' factor mul <|> factor
---        factor      = parens <|> parseNum
-
---additive :: Parser Expr
-----additive = op Add '+' multiply additive <|> op Sub '-' multiply additive <|> multiply
+additive :: Parser Expr
 --additive = op Add '+' multiply additive <|> op Sub '-' multiply additive <|> multiply
---
---multiply :: Parser Expr
---multiply = op Mul '*' factor multiply <|> op Div '/' factor multiply <|> factor
---
---factor :: Parser Expr
---factor = parenthesis <|> parseNum
---
---parenthesis :: Parser Expr
---parenthesis = parseSpacedChar '(' *> expr <* parseSpacedChar ')'
+additive = op Add '+' multiply additive <|> op Sub '-' multiply additive <|> multiply
+
+multiply :: Parser Expr
+multiply = op Mul '*' factor multiply <|> op Div '/' factor multiply <|> factor
+
+factor :: Parser Expr
+factor = parenthesis <|> parseNum
+
+parenthesis :: Parser Expr
+parenthesis = parseSpacedChar '(' *> expr <* parseSpacedChar ')'
 
 -- GOOD OMFG
 --opNeg :: (Expr -> Expr -> Expr) -> Char -> Parser Expr -> Parser Expr -> Parser Expr
 --opNeg c o p1 p2 = c <$> fct <*> (parseSpacedChar o *> p2)
 --    where
 --        fct = (p1 >>= (\x -> multiply))
+
+
+--chainLeftAssociative :: Parser a -> (a -> a -> a) -> a -> Parser a
+--chainLeftAssociative p op a = (p `chainLeftAssociative'` op) <|> return a
+--
+--chainLeftAssociative' :: Parser a -> (a -> a -> a) -> Parser a
+--chainLeftAssociative' p op = do x <- p; fct x
+--    where
+--        fct x = do f <- op
+--                   b <- p
+--                   fct (f x b)
+--                <|> return x
 
 
 op :: (Expr -> Expr -> Expr) -> Char -> Parser Expr -> Parser Expr -> Parser Expr
