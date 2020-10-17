@@ -27,10 +27,8 @@ source-repository head
 
 library
   exposed-modules:
-      Boostrap
-      RecursiveDescent
-      RecursiveDescentRebirth
-      CleanStr
+      BootstrapJust
+      MonadicParser
   other-modules:
       Paths_funEvalExpr
   hs-source-dirs:
