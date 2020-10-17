@@ -6,22 +6,22 @@ import BootstrapJust
 --------
 
 parseNum :: Parser Float
-parseNum = parseChar '+' *> parseFloat <|> parseFloat
+parseNum = parseSpacedChar '+' *> parseFloat <|> parseSpaced parseFloat
 
 additive :: Parser (Float -> Float -> Float)
 additive = do
-    parseChar '+'
+    parseSpacedChar '+'
     return (+)
     <|> do
-    parseChar '-'
+    parseSpacedChar '-'
     return (-)
 
 multitive :: Parser (Float -> Float -> Float)
 multitive = do
-    parseChar '*'
+    parseSpacedChar '*'
     return (*)
     <|> do
-    parseChar '/'
+    parseSpacedChar '/'
     return (/)
 
 expr :: Parser Float
@@ -35,9 +35,9 @@ factor = parseNum <|>  parens expr
 
 parens :: Parser a -> Parser a
 parens p = do
-    parseChar '('
+    parseSpacedChar '('
     a <- p
-    parseChar ')'
+    parseSpacedChar ')'
     return a
 
 chainLeftAssociative :: Parser a -> Parser (a -> a -> a) -> a -> Parser a

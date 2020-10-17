@@ -48,8 +48,15 @@ parseUFloat = (read::String->Float) <$> some parseFloatDigit
 parseFloat :: Parser Float
 parseFloat = parseNegFloat <|> parseUFloat
     where
---        parseNegFloat = const negate <$> parseChar '-' <*> parseUFloat
         parseNegFloat = (negate <$ parseChar '-') <*> parseUFloat
+
+parseUDouble :: Parser Double
+parseUDouble = (read::String->Double) <$> some parseFloatDigit
+
+parseDouble :: Parser Double
+parseDouble = parseNegDouble <|> parseUDouble
+    where
+        parseNegDouble = (negate <$ parseChar '-') <*> parseUDouble
 
 parseSpaced :: Parser a -> Parser a
 parseSpaced p = many (parseChar ' ') *> p <* many (parseChar ' ')
