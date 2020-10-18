@@ -54,6 +54,14 @@ parseFloat = parseNegFloat <|> parseUFloat
 --        parseNegFloat = const negate <$> parseChar '-' <*> parseUFloat
         parseNegFloat = (negate <$ parseChar '-') <*> parseUFloat
 
+parseUDouble :: Parser Double
+parseUDouble = read <$> some parseFloatDigit
+
+parseDouble :: Parser Double
+parseDouble = parseNegDouble <|> parseUDouble
+    where
+        parseNegDouble = (negate <$ parseChar '-') <*> parseUDouble
+
 parseSpacedChar :: Char -> Parser Char
 parseSpacedChar c = parseSpaced $ parseChar c
 
@@ -70,32 +78,32 @@ parseTuple p = openPar *> parseTuple' <* closePar
         comma           = parseSpaced $ parseChar ','
 
 
---instance Functor Parser where
---    fmap f (Parser p) = Parser fct
---        where
---            fct s = case p s of
---                Right (x, xs) -> Right (f x, xs)
---                Left b -> Left b
---
---instance Applicative Parser where
---    pure p = Parser $ \x -> Right (p, x)
---
---    -- Using Applicative to apply Parser p1 AND Parser p2
---    Parser p1 <*> p2 = Parser fct
---        where
---            fct s = case p1 s of
---                Right (f, left) -> case runParser p2 left of
---                    Right (a, left')  -> Right (f a, left')
---                    Left msg        -> Left msg
---                Left msg -> Left msg
-
-
 instance Functor Parser where
-    fmap f p = do x<-p; return (f x)
+    fmap f (Parser p) = Parser fct
+        where
+            fct s = case p s of
+                Right (x, xs) -> Right (f x, xs)
+                Left b -> Left b
 
 instance Applicative Parser where
-    pure = return
-    p1 <*> p2 = do x<-p1; y<-p2; return (x y)
+    pure p = Parser $ \x -> Right (p, x)
+
+    -- Using Applicative to apply Parser p1 AND Parser p2
+    Parser p1 <*> p2 = Parser fct
+        where
+            fct s = case p1 s of
+                Right (f, left) -> case runParser p2 left of
+                    Right (a, left')  -> Right (f a, left')
+                    Left msg        -> Left msg
+                Left msg -> Left msg
+
+
+--instance Functor Parser where
+--    fmap f p = do x<-p; return (f x)
+--
+--instance Applicative Parser where
+--    pure = return
+--    p1 <*> p2 = do x<-p1; y<-p2; return (x y)
 
 
 instance Alternative Parser where

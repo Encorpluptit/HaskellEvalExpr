@@ -15,6 +15,8 @@ data Expr = Add Expr Expr
           deriving (Show, Eq, Ord)
 
 instance Num Expr where
+    (Fail s) + _ = Fail s
+    _ + (Fail s) = Fail s
     (Number a) + (Number b) = Number (a + b)
     (Number a) - (Number b) = Number (a - b)
     (Number a) * (Number b) = Number (a * b)
@@ -27,6 +29,7 @@ instance Num Expr where
 
 instance Fractional Expr where
     fromRational a = Number $ fromRational a
+    (Number a) / (Number 0) = Fail "Cannot Divide by zero"
     (Number a) / (Number b) = Number (a / b)
 
 instance Floating Expr where
@@ -65,11 +68,6 @@ multitive = do
     parseSpacedChar '/'
     return Div
 
-powerative :: Parser (Expr -> Expr -> Expr)
-powerative = do
-    parseSpacedChar '^'
-    return Pow
-
 expr :: Parser Expr
 expr  = term `chainLeftAssociative'` additive
 
@@ -77,7 +75,9 @@ term :: Parser Expr
 term = power `chainLeftAssociative'` multitive
 
 power :: Parser Expr
-power = factor `chainLeftAssociative'` powerative
+power = rightPower <|> factor
+    where
+        rightPower = Pow <$> factor <*> (parseSpacedChar '^' *> power)
 
 factor :: Parser Expr
 factor = parens expr <|> parseNum
@@ -105,9 +105,8 @@ eval e = case e of
     Add a b         -> eval a + eval b
     Sub a b         -> eval a - eval b
     Mul a b         -> eval a * eval b
-    Div a (Number 0)-> Fail "Cannot Divide by zero"
     Div a b         -> eval a / eval b
-    Pow a b         -> eval a ** eval b
+    Pow a b         -> (eval a) ** (eval b)
     Number n        -> Number n
     Fail s          -> error s
 
