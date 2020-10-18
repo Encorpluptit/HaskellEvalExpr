@@ -54,6 +54,9 @@ parseFloat = parseNegFloat <|> parseUFloat
 --        parseNegFloat = const negate <$> parseChar '-' <*> parseUFloat
         parseNegFloat = (negate <$ parseChar '-') <*> parseUFloat
 
+parseSpacedChar :: Char -> Parser Char
+parseSpacedChar c = parseSpaced $ parseChar c
+
 parseSpaced :: Parser a -> Parser a
 parseSpaced p = many (parseChar ' ') *> p <* many (parseChar ' ')
 
@@ -67,24 +70,33 @@ parseTuple p = openPar *> parseTuple' <* closePar
         comma           = parseSpaced $ parseChar ','
 
 
+--instance Functor Parser where
+--    fmap f (Parser p) = Parser fct
+--        where
+--            fct s = case p s of
+--                Right (x, xs) -> Right (f x, xs)
+--                Left b -> Left b
+--
+--instance Applicative Parser where
+--    pure p = Parser $ \x -> Right (p, x)
+--
+--    -- Using Applicative to apply Parser p1 AND Parser p2
+--    Parser p1 <*> p2 = Parser fct
+--        where
+--            fct s = case p1 s of
+--                Right (f, left) -> case runParser p2 left of
+--                    Right (a, left')  -> Right (f a, left')
+--                    Left msg        -> Left msg
+--                Left msg -> Left msg
+
+
 instance Functor Parser where
-    fmap f (Parser p) = Parser fct
-        where
-            fct s = case p s of
-                Right (x, xs) -> Right (f x, xs)
-                Left b -> Left b
+    fmap f p = do x<-p; return (f x)
 
 instance Applicative Parser where
-    pure p = Parser $ \x -> Right (p, x)
+    pure = return
+    p1 <*> p2 = do x<-p1; y<-p2; return (x y)
 
-    -- Using Applicative to apply Parser p1 AND Parser p2
-    Parser p1 <*> p2 = Parser fct
-        where
-            fct s = case p1 s of
-                Right (f, left) -> case runParser p2 left of
-                    Right (a, left')  -> Right (f a, left')
-                    Left msg        -> Left msg
-                Left msg -> Left msg
 
 instance Alternative Parser where
     empty = Parser $ const $ Left "parser Empty"
@@ -103,18 +115,20 @@ instance Alternative Parser where
     -- uncurry :: (a -> b -> c) -> (a, b) -> c
     -- Here unpack the tuple (a,b) and apply the fct a -> b -> c with a first arg and b second arg
     -- See Functor (fmap)
-    some parser = uncurry (:) <$> fct
-        where
-            fct = (\x y -> (x,y)) <$> parser <*> many parser
+
+--    some parser = uncurry (:) <$> fct
+--        where
+--            fct = (\x y -> (x,y)) <$> parser <*> many parser
 
     -- Using recursive to parse with Parser a and adding each parsed element to a list of parsed elements
     -- (:) -> fct that take 2 args (an elem and a list) and prepend (insert before) that elem to the list.
     -- (:) :: a -> [a] -> [a]
-    many parser = Parser fct
-        where
-            fct s = case runParser ((:) <$> parser <*> many parser) s of
-                Left _  -> Right ([], s)
-                r       -> r
+
+--    many parser = Parser fct
+--        where
+--            fct s = case runParser ((:) <$> parser <*> many parser) s of
+--                Left _  -> Right ([], s)
+--                r       -> r
 
 instance Monad Parser where
     return p = Parser $ \x -> Right (p, x)

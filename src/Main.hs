@@ -4,10 +4,10 @@ import System.Environment (getArgs)
 import System.Exit
 import System.IO
 import Text.Printf
-import MonadicParser
+import MonadicParser(evalExpr)
 
 writeError :: String -> IO ()
-writeError str = hPutStrLn stderr ("Error : " ++ str)
+writeError str = hPutStrLn stderr ("Error: " ++ str)
 
 exitError :: String -> IO a
 exitError [] = exitWith $ ExitFailure 84
@@ -24,5 +24,5 @@ main = do
     case args of
         [] ->  exitError "No args given"
         (x:_) -> case evalExpr x of
-            Just a      -> printf "%.2f\n" (rounded a 3)
-            Nothing     -> exitError "Parsing Failed"
+            Right (a, xs)   -> printf "%.2f\n" (rounded a 3)
+            Left msg        -> exitError msg
