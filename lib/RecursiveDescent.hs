@@ -16,7 +16,7 @@ data Expr = Add Expr Expr
           | Pow Expr Expr
           | Number Float
           | Fail Error
-          deriving (Show)
+          deriving (Show, Eq)
 
 parseNum :: Parser Expr
 parseNum = parseSpacedChar '+' *> (Number <$> parseSpaced parseFloat) <|> (Number <$> parseSpaced parseFloat)

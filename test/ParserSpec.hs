@@ -14,7 +14,7 @@ spec = describe "Lib Parser Testing" $ do
     testParseUFloat
     testParseFloat
 
-testParseChar::Spec
+testParseChar :: Spec
 testParseChar =
     describe "Parse Char" $ do
         it "parse 'a' in \"abcd\" -> Right ('a', \"bcd\")" $ do
@@ -30,7 +30,7 @@ testParseChar =
         it "parse 'b' in \"abcd\" -> Left _" $ do
             runParser (parseChar 'b') "abcd" `shouldSatisfy` isLeft
 
-testParseAnyChar::Spec
+testParseAnyChar :: Spec
 testParseAnyChar =
     describe "Parse Any Char" $ do
         it "parse \"abcd\" in \"abcd\" -> Right ('a', \"bcd\")" $ do
@@ -50,7 +50,7 @@ testParseAnyChar =
         it "parse 'b' in \"abcd\"" $ do
             runParser (parseChar 'b') "abcd" `shouldSatisfy` isLeft
 
-testParseUInt::Spec
+testParseUInt :: Spec
 testParseUInt =
     describe "Parse Unsigned Int" $ do
         it "parse \"42aaa\" -> Right (42, \"aaa\")" $ do
@@ -66,7 +66,7 @@ testParseUInt =
         it "parse \"aaa42\" -> Left _" $ do
             runParser parseUInt "aaa42" `shouldSatisfy` isLeft
 
-testParseInt::Spec
+testParseInt :: Spec
 testParseInt =
     describe "Parse Int" $ do
         it "parse \"42aaa\" -> Right (42, \"aaa\")" $ do
@@ -102,7 +102,7 @@ testParseInt =
         it "parse \"aaa-42\" -> Left _" $ do
             runParser parseInt "aaa-42" `shouldSatisfy` isLeft
 
-testParseUFloat::Spec
+testParseUFloat :: Spec
 testParseUFloat =
     describe "Parse UFloat" $ do
         it "parse \"42.8511aaa\" -> Right (-42.8511, \"aaa\")" $ do
@@ -120,7 +120,7 @@ testParseUFloat =
         it "parse \"aaa42.5852\" -> Left _" $ do
             runParser parseUFloat "aaa42.8511" `shouldSatisfy` isLeft
 
-testParseFloat::Spec
+testParseFloat :: Spec
 testParseFloat =
     describe "Parse Float" $ do
         it "parse \"42.8511aaa\" -> Right (42.8511, \"aaa\")" $ do
@@ -156,7 +156,7 @@ testParseFloat =
         it "parse \"aaa-42.8511\" -> Left _" $ do
             runParser parseFloat "aaa-42.8511" `shouldSatisfy` isLeft
 
-testParseUDouble::Spec
+testParseUDouble :: Spec
 testParseUDouble =
     describe "Parse UDouble" $ do
         it "parse \"42.8511aaa\" -> Right (-42.8511, \"aaa\")" $ do
@@ -174,7 +174,7 @@ testParseUDouble =
         it "parse \"aaa42.5852\" -> Left _" $ do
             runParser parseUDouble "aaa42.8511" `shouldSatisfy` isLeft
 
-testParseDouble::Spec
+testParseDouble :: Spec
 testParseDouble =
     describe "Parse Double" $ do
         it "parse \"42.8511aaa\" -> Right (42.8511, \"aaa\")" $ do

@@ -5,12 +5,12 @@ import Test.QuickCheck
 import RecursiveDescent
 
 spec :: Spec
-spec = describe "Monadic Testing" $ do
+spec = describe "Recursive Descent Testing" $ do
     describe "Additive" $ do
         testAddition
         testSubtract
 
-testAddition::Spec
+testAddition :: Spec
 testAddition =
     describe "Addition" $ do
         it "simple char addition \"5+6\"" $ do
@@ -22,7 +22,7 @@ testAddition =
         it "simple char addition \"5+6+4+8+6+8\"" $ do
             evalExpr "5+5+5+5+5+5+5+5+5+5" `shouldBe` Right (50, "")
 
-testSubtract::Spec
+testSubtract :: Spec
 testSubtract =
     describe "Subtract" $ do
         it "simple char subtract \"-6\"" $ do
