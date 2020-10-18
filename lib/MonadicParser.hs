@@ -20,6 +20,9 @@ instance Num Expr where
     (Number a) + (Number b) = Number (a + b)
     (Number a) - (Number b) = Number (a - b)
     (Number a) * (Number b) = Number (a * b)
+--    (+) = Add
+--    (-) = Sub
+--    (*) = Mul
     fromInteger a = Number $ fromInteger a
     abs (Number a) = Number $ abs a
     signum (Number a)
