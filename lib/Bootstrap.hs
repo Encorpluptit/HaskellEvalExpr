@@ -66,7 +66,8 @@ parseSpacedChar :: Char -> Parser Char
 parseSpacedChar c = parseSpaced $ parseChar c
 
 parseSpaced :: Parser a -> Parser a
-parseSpaced p = many (parseChar ' ') *> p <* many (parseChar ' ')
+parseSpaced p = many (parseAnyChar "\t ") *> p <* many (parseAnyChar "\t ")
+--parseSpaced p = many (parseChar ' ') *> p <* many (parseChar ' ')
 
 parseTuple :: Parser a -> Parser (a, a)
 parseTuple p = openPar *> parseTuple' <* closePar
@@ -117,6 +118,13 @@ instance Alternative Parser where
                     Right a -> Right a
                     r'        -> r'
                 r -> r
+--    Parser p1 <|> Parser p2 = Parser fct
+--        where
+--            fct s = case p1 s of
+--                Left _ -> case p2 s of
+--                    Right a -> Right a
+--                    r'        -> r'
+--                r -> r
 
     -- Using Functor infix notation to parse with the fct contained in Parser a and apply (:) to the tuple returned by fct
     -- uncurry -> fct that take 2 args (a fct with 2 params and a tuple) to and apply this fct with the elems of this tuple as args of the fct.

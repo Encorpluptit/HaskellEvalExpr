@@ -59,7 +59,8 @@ parseDouble = parseNegDouble <|> parseUDouble
         parseNegDouble = (negate <$ parseChar '-') <*> parseUDouble
 
 parseSpaced :: Parser a -> Parser a
-parseSpaced p = many (parseChar ' ') *> p <* many (parseChar ' ')
+parseSpaced p = many (parseAnyChar "\t ") *> p <* many (parseAnyChar "\t ")
+--parseSpaced p = some (parseAnyChar "\t ") *> p <* some (parseAnyChar "\t ")
 
 parseSpacedChar :: Char -> Parser Char
 parseSpacedChar c = parseSpaced $ parseChar c

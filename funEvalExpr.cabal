@@ -30,6 +30,7 @@ library
       Bootstrap
       BootstrapJust
       MonadicParser
+      CalcRebirth
   other-modules:
       Paths_funEvalExpr
   hs-source-dirs:
