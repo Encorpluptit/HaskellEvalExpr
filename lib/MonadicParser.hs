@@ -9,6 +9,7 @@ data Expr = Add Expr Expr
           | Sub Expr Expr
           | Mul Expr Expr
           | Div Expr Expr
+          | Pow Expr Expr
           | Number Float
           | Fail String
           deriving (Show, Eq, Ord)
@@ -27,6 +28,23 @@ instance Num Expr where
 instance Fractional Expr where
     fromRational a = Number $ fromRational a
     (Number a) / (Number b) = Number (a / b)
+
+instance Floating Expr where
+    pi                          = Number pi
+    (Number a) ** (Number b)    = Number (a ** b)
+    sqrt (Number a)             = Number $ sqrt a
+    exp (Number a)              = Number $ exp a
+    log (Number a)              = Number $ log a
+    sin (Number a)              = Number $ sin a
+    cos (Number a)              = Number $ cos a
+    sinh (Number a)             = Number $ sinh a
+    cosh (Number a)             = Number $ cosh a
+    asin (Number a)             = Number $ asin a
+    acos (Number a)             = Number $ acos a
+    atan (Number a)             = Number $ atan a
+    asinh (Number a)            = Number $ asinh a
+    acosh (Number a)            = Number $ acosh a
+    atanh (Number a)            = Number $ atanh a
 
 parseNum :: Parser Expr
 parseNum = parseSpacedChar '+' *> (Number <$> parseSpaced parseFloat) <|> (Number <$> parseSpaced parseFloat)
@@ -47,11 +65,19 @@ multitive = do
     parseSpacedChar '/'
     return Div
 
+powerative :: Parser (Expr -> Expr -> Expr)
+powerative = do
+    parseSpacedChar '^'
+    return Pow
+
 expr :: Parser Expr
 expr  = term `chainLeftAssociative'` additive
 
 term :: Parser Expr
-term = factor `chainLeftAssociative'` multitive
+term = power `chainLeftAssociative'` multitive
+
+power :: Parser Expr
+power = factor `chainLeftAssociative'` powerative
 
 factor :: Parser Expr
 factor = parens expr <|> parseNum
@@ -81,6 +107,7 @@ eval e = case e of
     Mul a b         -> eval a * eval b
     Div a (Number 0)-> Fail "Cannot Divide by zero"
     Div a b         -> eval a / eval b
+    Pow a b         -> eval a ** eval b
     Number n        -> Number n
     Fail s          -> error s
 
