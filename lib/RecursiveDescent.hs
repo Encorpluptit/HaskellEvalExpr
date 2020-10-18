@@ -5,6 +5,7 @@ module RecursiveDescent where
 
 import Control.Applicative
 import Parsing
+import Debug.Trace
 
 --------
 
@@ -49,10 +50,25 @@ factor = parens expr <|> parseNum
 
 parens :: Parser Expr -> Parser Expr
 parens p = do
+    sign '+' p
+    <|> do
+    sign '-' negate
+    <|> do
     parseSpacedChar '('
     a <- p
     parseSpacedChar ')'
     return a
+    where
+        left = Number 0
+        sign c p1 = do
+            parseSpacedChar c
+            parseSpacedChar '('
+            a <- p1
+            parseSpacedChar ')'
+            return a
+        negate = do
+            right <- p
+            return (Sub left right)
 
 -- | -----------------------------------------------------------------------------
 -- 10-3-2:
@@ -82,7 +98,9 @@ eval (Fail s) = Left s
 
 evalAST :: Expr -> Result Float
 evalAST a = case eval a of
-    Right a -> Right (a, [])
+    Right a -> case isInfinite a of
+        False -> Right (a, [])
+        True -> Left "Division by 0"
     Left a -> Left a
 
 -- | -----------------------------------------------------------------------------

@@ -81,18 +81,7 @@ parseTuple p = openPar *> parseTuple' <* closePar
 --            fct s = case p s of
 --                Right (x, xs) -> Right (f x, xs)
 --                Left b -> Left b
---
---instance Applicative Parser where
---    pure p = Parser $ \x -> Right (p, x)
---
---    -- Using Applicative to apply Parser p1 AND Parser p2
---    Parser p1 <*> p2 = Parser fct
---        where
---            fct s = case p1 s of
---                Right (f, left) -> case runParser p2 left of
---                    Right (a, left')  -> Right (f a, left')
---                    Left msg        -> Left msg
---                Left msg -> Left msg
+
 
 
 -- | -----------------------------------------------------------------------------
@@ -107,6 +96,13 @@ parseTuple p = openPar *> parseTuple' <* closePar
 instance Functor Parser where
     fmap f p = do x<-p; return (f x)
 
+--instance Functor Parser where
+--    fmap f (Parser p) = Parser fct
+--        where
+--            fct s = case p s of
+--                Right (x, xs) -> Right (f x, xs)
+--                Left b -> Left b
+
 
 -- | -----------------------------------------------------------------------------
 -- Alternative Functor:
@@ -120,6 +116,18 @@ instance Functor Parser where
 instance Applicative Parser where
     pure = return
     p1 <*> p2 = do x<-p1; y<-p2; return (x y)
+
+--instance Applicative Parser where
+--    pure p = Parser $ \x -> Right (p, x)
+--
+--    -- Using Applicative to apply Parser p1 AND Parser p2
+--    Parser p1 <*> p2 = Parser fct
+--        where
+--            fct s = case p1 s of
+--                Right (f, left) -> case runParser p2 left of
+--                    Right (a, left')  -> Right (f a, left')
+--                    Left msg        -> Left msg
+--                Left msg -> Left msg0
 
 
 -- | -----------------------------------------------------------------------------

@@ -68,7 +68,7 @@ ghcid:
 dev-deps:
 	stack install ghcid
 
-tests_run: $(package) test
+tests_run: re test
 	test/run.sh
 
 sign:
