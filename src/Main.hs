@@ -5,7 +5,7 @@ import System.Exit
 import System.IO
 import Text.Printf
 import Numeric
-import MonadicParser(evalExpr)
+import RecursiveDescent(evalExpr)
 
 writeError :: String -> IO ()
 writeError str = hPutStrLn stderr ("Error: " ++ str)

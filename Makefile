@@ -68,8 +68,8 @@ ghcid:
 dev-deps:
 	stack install ghcid
 
-tests_run: test
-	test/jenrik test/test_funEvalExpr.toml
+tests_run: $(package) test
+	test/run.sh
 
 sign:
 	@echo ""

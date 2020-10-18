@@ -1,4 +1,4 @@
-module RecursiveDescentRebirth where
+module RecursiveDescent where
 
 import Control.Applicative
 import Debug.Trace
@@ -25,13 +25,13 @@ import Bootstrap (
 -- https://courses.lumenlearning.com/ivytech-collegealgebra/chapter/using-the-addition-and-multiplication-principles/
 
 data Expr = Number Float
-            | Add Expr Expr
-            | Sub Expr Expr
-            | Mul Expr Expr
-            | Div Expr Expr
-            | Power Expr Expr
-            | Fail
-            deriving (Show, Eq, Ord)
+    | Add Expr Expr
+    | Sub Expr Expr
+    | Mul Expr Expr
+    | Div Expr Expr
+    | Power Expr Expr
+    | Fail
+        deriving (Show, Eq, Ord)
 
 parseNum :: Parser Expr
 --parseNum =  (Number <$> parseFloat)

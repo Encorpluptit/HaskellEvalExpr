@@ -1,4 +1,4 @@
-module Bootstrap where
+module Parsing where
 
 import Data.Either
 import Control.Applicative
@@ -26,11 +26,8 @@ parseFloatDigit = parseAnyChar ('.':['0'..'9'])
 
 -- Using Alternative <|> (parseOr) to parse a char or the rest of the string
 parseAnyChar :: String -> Parser Char
---parseAnyChar (a:as) = parseChar a <|> parseAnyChar as
---parseAnyChar [] = Parser (\x -> Left "ParseAnyChar failed: Empty or End of List")
---parseAnyChar as = foldr ((<|>) . parseChar) fail as
 parseAnyChar = foldr ((<|>) . parseChar) failed
-    where failed = Parser (\ _ -> Left "ParseAnyChar failed: Empty or End of List")
+    where failed = Parser $ const $ Left "ParseAnyChar failed: Empty or End of List"
 
 -- Using fmap infix notation to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
 parseUInt :: Parser Int
@@ -67,7 +64,6 @@ parseSpacedChar c = parseSpaced $ parseChar c
 
 parseSpaced :: Parser a -> Parser a
 parseSpaced p = many (parseAnyChar "\t ") *> p <* many (parseAnyChar "\t ")
---parseSpaced p = many (parseChar ' ') *> p <* many (parseChar ' ')
 
 parseTuple :: Parser a -> Parser (a, a)
 parseTuple p = openPar *> parseTuple' <* closePar
@@ -79,33 +75,61 @@ parseTuple p = openPar *> parseTuple' <* closePar
         comma           = parseSpaced $ parseChar ','
 
 
-instance Functor Parser where
-    fmap f (Parser p) = Parser fct
-        where
-            fct s = case p s of
-                Right (x, xs) -> Right (f x, xs)
-                Left b -> Left b
-
-instance Applicative Parser where
-    pure p = Parser $ \x -> Right (p, x)
-
-    -- Using Applicative to apply Parser p1 AND Parser p2
-    Parser p1 <*> p2 = Parser fct
-        where
-            fct s = case p1 s of
-                Right (f, left) -> case runParser p2 left of
-                    Right (a, left')  -> Right (f a, left')
-                    Left msg        -> Left msg
-                Left msg -> Left msg
-
-
 --instance Functor Parser where
---    fmap f p = do x<-p; return (f x)
+--    fmap f (Parser p) = Parser fct
+--        where
+--            fct s = case p s of
+--                Right (x, xs) -> Right (f x, xs)
+--                Left b -> Left b
 --
 --instance Applicative Parser where
---    pure = return
---    p1 <*> p2 = do x<-p1; y<-p2; return (x y)
+--    pure p = Parser $ \x -> Right (p, x)
+--
+--    -- Using Applicative to apply Parser p1 AND Parser p2
+--    Parser p1 <*> p2 = Parser fct
+--        where
+--            fct s = case p1 s of
+--                Right (f, left) -> case runParser p2 left of
+--                    Right (a, left')  -> Right (f a, left')
+--                    Left msg        -> Left msg
+--                Left msg -> Left msg
 
+
+-- | -----------------------------------------------------------------------------
+-- Alternative Functor:
+-- Implement:
+--      - empty
+--      - <|>
+--      - some
+--      - many
+-- | -----------------------------------------------------------------------------
+
+instance Functor Parser where
+    fmap f p = do x<-p; return (f x)
+
+
+-- | -----------------------------------------------------------------------------
+-- Alternative Functor:
+-- Implement:
+--      - empty
+--      - <|>
+--      - some
+--      - many
+-- | -----------------------------------------------------------------------------
+
+instance Applicative Parser where
+    pure = return
+    p1 <*> p2 = do x<-p1; y<-p2; return (x y)
+
+
+-- | -----------------------------------------------------------------------------
+-- Alternative Functor:
+-- Implement:
+--      - empty
+--      - <|>
+--      - some
+--      - many
+-- | -----------------------------------------------------------------------------
 
 instance Alternative Parser where
     empty = Parser $ const $ Left "parser Empty"
@@ -118,13 +142,6 @@ instance Alternative Parser where
                     Right a -> Right a
                     r'        -> r'
                 r -> r
---    Parser p1 <|> Parser p2 = Parser fct
---        where
---            fct s = case p1 s of
---                Left _ -> case p2 s of
---                    Right a -> Right a
---                    r'        -> r'
---                r -> r
 
     -- Using Functor infix notation to parse with the fct contained in Parser a and apply (:) to the tuple returned by fct
     -- uncurry -> fct that take 2 args (a fct with 2 params and a tuple) to and apply this fct with the elems of this tuple as args of the fct.
@@ -154,8 +171,3 @@ instance Monad Parser where
                 Right (x, xs) -> runParser (f x) xs
                 Left msg -> Left msg
 --    fail msg = Parser (\s -> Left ("Monad Parser [fail]: " ++ msg))
-
--- https://stackoverflow.com/questions/44472008/why-is-there-no-alternative-instance-for-either-but-a-semigroup-that-behaves-sim
--- https://gitlab.haskell.org/ghc/ghc/-/issues/9588
--- https://gitlab.haskell.org/ghc/ghc/-/issues/12160
--- https://gitlab.haskell.org/ghc/ghc/-/issues/9588

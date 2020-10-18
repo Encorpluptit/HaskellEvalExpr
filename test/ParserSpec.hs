@@ -3,7 +3,7 @@ module ParserSpec where
 import Test.Hspec
 import Test.QuickCheck
 import Data.Either
-import Bootstrap
+import Parsing
 
 spec :: Spec
 spec = describe "Lib Parser Testing" $ do

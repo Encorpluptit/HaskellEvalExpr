@@ -126,6 +126,97 @@ test "chained_power" "2^4^2/2^2^3" "256.00" 0
 test "negative_power" "(2^(-2)*10^2)^(-1)" "0.04" 0
 echo
 
+echo "[Error Management]"
+test "Division by 0" "3/0" "" 84
+test "Empty parenthesis 01" "3+()" "" 84
+test "Empty parenthesis 02" "3+1()1" "" 84
+test "Empty string" " " "" 84
+test "Illegal character" "a*2" "" 84
+test "Missing number" "/2" "" 84
+test "Missing parenthesis" "3*(2+3+2" "" 84
+test "No number" "-" "" 84
+test "Reversed parenthesis" "3*)2+3(+2" "" 84
+test "Two enchained operators" "3/*3" "" 84
+test "Two numbers with no parenthesis" "12 34 + 1" "" 84
+echo
+
+echo "[One single unary operator]"
+test "Minus + blank 01" "	 	 -12.02	 " "-12.02" 0
+test "Minus + blank 02" "				-12.29 " "-12.29" 0
+test "Minus 01" "-1.23" "-1.23" 0
+test "Minus 02" "-12.23" "-12.23" 0
+test "Number + blank 01" " 3.14		" "3.14" 0
+test "Number + blank 02" "	 	 3.14 	 " "3.14" 0
+test "Number 01" "0.23" "0.23" 0
+test "Number 02" "14.23" "14.23" 0
+test "Number 03" "3.31" "3.31" 0
+test "Number 04" "5.12345" "5.12" 0
+test "Number 05" "7.129" "7.13" 0
+test "Power + blank 01" "	 3.1 	^ 2	" "9.61" 0
+test "Power + blank 02" "4.1^			2" "16.81" 0
+test "Power 01" "3.1^4" "92.35" 0
+test "Power 02" "0.5^2 " "0.25" 0
+test "Power 03" "4^0+0.02" "1.02" 0
+
+echo "[One single binary operator]"
+test "Addition + blank" " 	4.11 +	5 " "9.11" 0
+test "Addition 01" "1.11+1" "2.11" 0
+test "Addition 02" "0.5+0.65" "1.15" 0
+test "Addition 03" "+4+5.11" "9.11" 0
+test "Division + blank" "		 9.1 /	2 " "4.55" 0
+test "Division 01" "6.1/3" "2.03" 0
+test "Division 02" "5.5/0.15" "36.67" 0
+test "Division 03" "2.98/3" "0.99" 0
+test "Product + blank" "	 2.12 *	 2" "4.24" 0
+test "Product 01" "1.11*2" "2.22" 0
+test "Product 02" "0.31*4" "1.24" 0
+test "Product 03" "0.31*1.2" "0.37" 0
+test "Substraction + blank" "	 -4.11 -	5" "-9.11" 0
+test "Substraction 01" "6-3.11" "2.89" 0
+test "Substraction 02" "0.5-0.65" "-0.15" 0
+test "Substraction 03" "-4-5.11" "-9.11" 0
+
+echo "[parenthesis]"
+test "Addition" "(3+2.02)" "5.02" 0
+test "Addition + product 01" "2*(3+1.02)" "8.04" 0
+test "Addition + product 02" "(3+1)*4.02" "16.08" 0
+test "Complex 01" "(0.5-0.65)*3+2*(2+3*4)" "27.55" 0
+test "Complex 02" "(0.5-0.65)*(0.3+2)+0.02" "-0.32" 0
+test "Nested 01" "((((((((3.02))))))))" "3.02" 0
+test "Nested 02" "(0.5-(0.65-3))" "2.85" 0
+test "Nested 03" "(5*(0.65-3)*(2+3)-3)*4.03" "-248.85" 0
+test "Number + blank" "	 (	 4.98 	)" "4.98" 0
+test "Number 01" "(15.23)" "15.23" 0
+test "Number 02" "(-0.52)" "-0.52" 0
+
+echo "[Mixed binary operators]"
+test "01" "3/4+3.13/2+4/1/2+0.02" "4.34" 0
+test "02" "1+1/5+1.11/5/2+2" "3.31" 0
+test "03" "3+2+6*3+8*3*2+3.11" "74.11" 0
+test "04" "3*3+2.11-6*3+3" "-3.89" 0
+test "05" "34+0.41+3" "37.41" 0
+test "06" "12/2/3.11" "1.93" 0
+test "07" "4*1-2*1/5+1.23/5/2+2" "5.72" 0
+test "08" "2+1*2/4-15*3.13/6+1/5" "-5.12" 0
+test "09" "4*3*2*1*15.11" "362.64" 0
+test "10" "4-3-90.02" "-89.02" 0
+
+echo "[All mixed]"
+test "01" "4*(3.11+2)" "20.44" 0
+test "02" "2*4+4.11*(3+2)" "28.55" 0
+test "03" "2*4-4*(3.11+2)/2" "-2.22" 0
+test "04" "2*(4-4*(3+2.11)/2)+4*((3-5)-2)/4" "-16.44" 0
+test "05" "2*(4-1.11)^2" "16.70" 0
+test "06" "-2.11*(4-1)^(2-4)" "-0.23" 0
+test "07" "5.11+(-2)*((((4-1)^(2-4)/(3+2-3*2))))" "5.33" 0
+test "08" "-(-5.11+(-2)*((((4-1))^(2-4)/(3+2-3*2))))" "4.89" 0
+test "09" "5/2/(1.11-4)+(-2)*((((4-1)^(2-4)/(3+2-3*2)/(4+5))))" "-0.84" 0
+test "10" "-34+0.42*3" "-32.74" 0
+test "11" "-9*3.11+2*4" "-19.99" 0
+test "12" "90.11+4^3" "154.11" 0
+test "13" "+4.11-3^2" "-4.89" 0
+test "14" "-4.11*2/5-90/3" "-31.64" 0
+
 printf "\nRESULT:\n"
 printf "  $PASSED / $TOTAL\n"
 printf "  $(printf $(($PASSED * 10000 / $TOTAL)) | sed 's/..$/.&/') %%\n"
