@@ -13,6 +13,8 @@ spec = describe "Lib Parser Testing" $ do
     testParseInt
     testParseUFloat
     testParseFloat
+    testParseUDouble
+    testParseDouble
 
 testParseChar :: Spec
 testParseChar =
