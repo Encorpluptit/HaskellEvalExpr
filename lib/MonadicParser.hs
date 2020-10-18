@@ -53,20 +53,12 @@ parseNum :: Parser Expr
 parseNum = parseSpacedChar '+' *> (Number <$> parseSpaced parseFloat) <|> (Number <$> parseSpaced parseFloat)
 
 additive :: Parser (Expr -> Expr -> Expr)
-additive = do
-    parseSpacedChar '+'
-    return Add
-    <|> do
-    parseSpacedChar '-'
-    return Sub
+additive = (parseSpacedChar '+' >> return Add)
+            <|> (parseSpacedChar '-' >> return Sub)
 
 multitive :: Parser (Expr -> Expr -> Expr)
-multitive = do
-    parseSpacedChar '*'
-    return Mul
-    <|> do
-    parseSpacedChar '/'
-    return Div
+multitive = (parseSpacedChar '*' >> return Mul)
+            <|> (parseSpacedChar '/' >> return Div)
 
 expr :: Parser Expr
 expr  = term `chainLeftAssociative'` additive
@@ -83,11 +75,7 @@ factor :: Parser Expr
 factor = parens expr <|> parseNum
 
 parens :: Parser Expr -> Parser Expr
-parens p = do
-    parseSpacedChar '('
-    a <- p
-    parseSpacedChar ')'
-    return a
+parens p = parseSpacedChar '(' >> do {a <- p; parseSpacedChar ')'; return a}
 
 chainLeftAssociative :: Parser a -> Parser (a -> a -> a) -> a -> Parser a
 chainLeftAssociative p op a = (p `chainLeftAssociative'` op) <|> return a
@@ -95,10 +83,7 @@ chainLeftAssociative p op a = (p `chainLeftAssociative'` op) <|> return a
 chainLeftAssociative' :: Parser a -> Parser (a -> a -> a) -> Parser a
 chainLeftAssociative' p op = do x <- p; fct x
     where
-        fct x = do f <- op
-                   b <- p
-                   fct (f x b)
-                <|> return x
+        fct x = do {f <- op; b <- p; fct (f x b)} <|> return x
 
 eval :: Expr -> Expr
 eval e = case e of
