@@ -54,7 +54,7 @@ test-suite funEvalExpr-test
   main-is: Spec.hs
   other-modules:
       ParserSpec
-      MonadicSpec
+      RecursiveDescentSpec
       EvalSpec
       Paths_funEvalExpr
   hs-source-dirs:

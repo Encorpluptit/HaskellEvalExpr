@@ -107,6 +107,11 @@ evalAST a = case eval a of
 -- Core:
 -- | -----------------------------------------------------------------------------
 
+run :: Parser a -> String -> Result a
+run (Parser p) str = case p str of
+    Right (a, [])   -> Right (a, [])
+    Left msg        -> Left msg
+
 evalExpr :: String -> Result Float
 evalExpr s = case runParser expr s of
     Right (a, [])    -> evalAST a

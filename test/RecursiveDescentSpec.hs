@@ -1,4 +1,4 @@
-module MonadicSpec where
+module RecursiveDescentSpec where
 
 import Test.Hspec
 import Test.QuickCheck
@@ -15,8 +15,12 @@ testAddition =
     describe "Addition" $ do
         it "simple char addition \"5+6\"" $ do
             evalExpr "5+6" `shouldBe` Right (11, "")
+        it "simple char addition \"5+6\"" $ do
+            evalExpr "5+6+6+6" `shouldBe` Right (23, "")
         it "simple char addition \"5+6+4+8+6+8\"" $ do
             evalExpr "5+6+4+8+6+8" `shouldBe` Right (37, "")
+        it "simple char addition \"5+6+4+8+6+8\"" $ do
+            evalExpr "5+5+5+5+5+5+5+5+5+5" `shouldBe` Right (50, "")
 
 testSubtract::Spec
 testSubtract =

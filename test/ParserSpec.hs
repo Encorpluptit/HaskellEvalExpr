@@ -9,32 +9,10 @@ spec :: Spec
 spec = describe "Lib Parser Testing" $ do
     testParseChar
     testParseAnyChar
-    describe "Parse Unsigned Int" $ do
-        it "parse \"42aaa\" -> Right (42, \"aaa\")" $ do
-            runParser parseUInt "42aaa" `shouldBe` Right (42, "aaa")
-        it "parse \"aaa\" -> Left _" $ do
-            runParser parseUInt "aaa" `shouldSatisfy` isLeft
-            -- TODO: More Tests
-    describe "Parse Int" $ do
-        it "parse \"42aaa\" -> Right (42, \"aaa\")" $ do
-            runParser parseInt "42aaa" `shouldBe` Right (42, "aaa")
-        it "parse \"aaa\" -> Left _" $ do
-            runParser parseUInt "aaa" `shouldSatisfy` isLeft
-        it "parse \"-42aaa\" -> Right (-42, \"aaa\")" $ do
-            runParser parseInt "-42aaa" `shouldBe` Right (-42, "aaa")
-        it "parse \"aaa\" -> Left _" $ do
-            runParser parseUInt "aaa" `shouldSatisfy` isLeft
-            -- TODO: More Tests
-    describe "Parse Unsigned Float" $ do
-        it "parse \"42.0aaa\" -> Right (42.0, \"aaa\")" $ do
-            runParser parseFloat "42.0aaa" `shouldBe` Right (42.0, "aaa")
-        it "parse \"42.01aaa\" -> Right (42.01, \"aaa\")" $ do
-            runParser parseFloat "42.01aaa" `shouldBe` Right (42.01, "aaa")
-        it "parse \"a42aaa\" -> Left _" $ do
-            runParser parseFloat "a42aaa" `shouldSatisfy` isLeft
-            -- TODO: More Tests
+    testParseUInt
+    testParseInt
+    testParseUFloat
     testParseFloat
---            -- TODO: More Tests
 
 testParseChar::Spec
 testParseChar =
@@ -72,18 +50,162 @@ testParseAnyChar =
         it "parse 'b' in \"abcd\"" $ do
             runParser (parseChar 'b') "abcd" `shouldSatisfy` isLeft
 
+testParseUInt::Spec
+testParseUInt =
+    describe "Parse Unsigned Int" $ do
+        it "parse \"42aaa\" -> Right (42, \"aaa\")" $ do
+            runParser parseUInt "42aaa" `shouldBe` Right (42, "aaa")
+        it "parse \"4542aaa\" -> Right (4542, \"aaa\")" $ do
+            runParser parseUInt "4542aaa" `shouldBe` Right (4542, "aaa")
+        it "parse \"45454542aaa\" -> Right (4542, \"aaa\")" $ do
+            runParser parseUInt "45454542aaa" `shouldBe` Right (45454542, "aaa")
+        it "parse \"45489658962aaaa\" -> Right (4542, \"aaa\")" $ do
+            runParser parseUInt "45489658962aaa" `shouldBe` Right (45489658962, "aaa")
+        it "parse \"aaa\" -> Left _" $ do
+            runParser parseUInt "aaa42" `shouldSatisfy` isLeft
+        it "parse \"aaa42\" -> Left _" $ do
+            runParser parseUInt "aaa42" `shouldSatisfy` isLeft
+
+testParseInt::Spec
+testParseInt =
+    describe "Parse Int" $ do
+        it "parse \"42aaa\" -> Right (42, \"aaa\")" $ do
+            runParser parseInt "42aaa" `shouldBe` Right (42, "aaa")
+        it "parse \"aaa\" -> Left _" $ do
+            runParser parseUInt "aaa" `shouldSatisfy` isLeft
+        it "parse \"-42aaa\" -> Right (-42, \"aaa\")" $ do
+            runParser parseInt "-42aaa" `shouldBe` Right (-42, "aaa")
+        it "parse \"aaa\" -> Left _" $ do
+            runParser parseInt "aaa" `shouldSatisfy` isLeft
+        it "parse \"42aaa\" -> Right (42, \"aaa\")" $ do
+            runParser parseInt "42aaa" `shouldBe` Right (42, "aaa")
+        it "parse \"4542aaa\" -> Right (4542, \"aaa\")" $ do
+            runParser parseInt "4542aaa" `shouldBe` Right (4542, "aaa")
+        it "parse \"45454542aaa\" -> Right (45454542, \"aaa\")" $ do
+            runParser parseInt "45454542aaa" `shouldBe` Right (45454542, "aaa")
+        it "parse \"45489658962aaaa\" -> Right (45489658962, \"aaa\")" $ do
+            runParser parseInt "45489658962aaa" `shouldBe` Right (45489658962, "aaa")
+        it "parse \"aaa\" -> Left _" $ do
+            runParser parseInt "aaa" `shouldSatisfy` isLeft
+        it "parse \"aaa42\" -> Left _" $ do
+            runParser parseInt "aaa42" `shouldSatisfy` isLeft
+        it "parse \"42aaa\" -> Right (-42, \"aaa\")" $ do
+            runParser parseInt "-42aaa" `shouldBe` Right (-42, "aaa")
+        it "parse \"4542aaa\" -> Right (-4542, \"aaa\")" $ do
+            runParser parseInt "-4542aaa" `shouldBe` Right (-4542, "aaa")
+        it "parse \"45454542aaa\" -> Right (-45454542, \"aaa\")" $ do
+            runParser parseInt "-45454542aaa" `shouldBe` Right (-45454542, "aaa")
+        it "parse \"-45489658962aaaa\" -> Right (-45489658962, \"aaa\")" $ do
+            runParser parseInt "-45489658962aaa" `shouldBe` Right (-45489658962, "aaa")
+        it "parse \"aaa\" -> Left _" $ do
+            runParser parseInt "aaa" `shouldSatisfy` isLeft
+        it "parse \"aaa-42\" -> Left _" $ do
+            runParser parseInt "aaa-42" `shouldSatisfy` isLeft
+
+testParseUFloat::Spec
+testParseUFloat =
+    describe "Parse UFloat" $ do
+        it "parse \"42.8511aaa\" -> Right (-42.8511, \"aaa\")" $ do
+            runParser parseFloat "42.85110aaa" `shouldBe` Right (42.8511, "aaa")
+        it "parse \"42.01aaa\" -> Right (42.8511, \"aaa\")" $ do
+            runParser parseUFloat "42.8511aaa" `shouldBe` Right (42.8511, "aaa")
+        it "parse \"4542aaa\" -> Right (4542.8511, \"aaa\")" $ do
+            runParser parseUFloat "4542.8511aaa" `shouldBe` Right (4542.8511, "aaa")
+        it "parse \"45454542aaa\" -> Right (4542.8511, \"aaa\")" $ do
+            runParser parseUFloat "45454542.8511aaa" `shouldBe` Right (45454542.8511, "aaa")
+        it "parse \"45489658962aaaa\" -> Right (4542.8511, \"aaa\")" $ do
+            runParser parseUFloat "45489658962.8511aaa" `shouldBe` Right (45489658962.8511, "aaa")
+        it "parse \"aaa\" -> Left _" $ do
+            runParser parseUFloat "aaa42.21585" `shouldSatisfy` isLeft
+        it "parse \"aaa42.5852\" -> Left _" $ do
+            runParser parseUFloat "aaa42.8511" `shouldSatisfy` isLeft
+
 testParseFloat::Spec
 testParseFloat =
     describe "Parse Float" $ do
-        it "parse \"42.0aaa\" -> Right (42.0, \"aaa\")" $ do
-            runParser parseFloat "42.0aaa" `shouldBe` Right (42.0, "aaa")
-        it "parse \"-42.0aaa\" -> Right (-42, \"aaa\")" $ do
-            runParser parseFloat "-42.0aaa" `shouldBe` Right (-42.0, "aaa")
-        it "parse \"42.01aaa\" -> Right (42.01, \"aaa\")" $ do
-            runParser parseFloat "42.01aaa" `shouldBe` Right (42.01, "aaa")
-        it "parse \"-42.01aaa\" -> Right (-421, \"aaa\")" $ do
-            runParser parseFloat "-42.01aaa" `shouldBe` Right (-42.01, "aaa")
+        it "parse \"42.8511aaa\" -> Right (42.8511, \"aaa\")" $ do
+            runParser parseFloat "42.8511aaa" `shouldBe` Right (42.8511, "aaa")
         it "parse \"aaa\" -> Left _" $ do
             runParser parseFloat "aaa" `shouldSatisfy` isLeft
-        it "parse \"a42aaa\" -> Left _" $ do
-            runParser parseFloat "a42aaa" `shouldSatisfy` isLeft
+        it "parse \"-42.8511aaa\" -> Right (-42.8511, \"aaa\")" $ do
+            runParser parseFloat "-42.8511aaa" `shouldBe` Right (-42.8511, "aaa")
+        it "parse \"aaa\" -> Left _" $ do
+            runParser parseFloat "aaa" `shouldSatisfy` isLeft
+        it "parse \"42.8511aaa\" -> Right (42.8511, \"aaa\")" $ do
+            runParser parseFloat "42.8511aaa" `shouldBe` Right (42.8511, "aaa")
+        it "parse \"4542.8511aaa\" -> Right (4542.8511, \"aaa\")" $ do
+            runParser parseFloat "4542.8511aaa" `shouldBe` Right (4542.8511, "aaa")
+        it "parse \"45454542.8511aaa\" -> Right (45454542.8511, \"aaa\")" $ do
+            runParser parseFloat "45454542.8511aaa" `shouldBe` Right (45454542.8511, "aaa")
+        it "parse \"45489658962.8511aaaa\" -> Right (45489658962.8511, \"aaa\")" $ do
+            runParser parseFloat "45489658962.8511aaa" `shouldBe` Right (45489658962.8511, "aaa")
+        it "parse \"aaa\" -> Left _" $ do
+            runParser parseFloat "aaa" `shouldSatisfy` isLeft
+        it "parse \"aaa42\" -> Left _" $ do
+            runParser parseFloat "aaa42.8511" `shouldSatisfy` isLeft
+        it "parse \"42.8511aaa\" -> Right (-42.8511, \"aaa\")" $ do
+            runParser parseFloat "-42.8511aaa" `shouldBe` Right (-42.8511, "aaa")
+        it "parse \"4542.8511aaa\" -> Right (-4542.8511, \"aaa\")" $ do
+            runParser parseFloat "-4542.8511aaa" `shouldBe` Right (-4542.8511, "aaa")
+        it "parse \"45454542.8511aaa\" -> Right (-45454542.8511, \"aaa\")" $ do
+            runParser parseFloat "-45454542.8511aaa" `shouldBe` Right (-45454542.8511, "aaa")
+        it "parse \"-45489658962.8511aaaa\" -> Right (-45489658962.8511, \"aaa\")" $ do
+            runParser parseFloat "-45489658962.8511aaa" `shouldBe` Right (-45489658962.8511, "aaa")
+        it "parse \"aaa\" -> Left _" $ do
+            runParser parseFloat "aaa" `shouldSatisfy` isLeft
+        it "parse \"aaa-42.8511\" -> Left _" $ do
+            runParser parseFloat "aaa-42.8511" `shouldSatisfy` isLeft
+
+testParseUDouble::Spec
+testParseUDouble =
+    describe "Parse UDouble" $ do
+        it "parse \"42.8511aaa\" -> Right (-42.8511, \"aaa\")" $ do
+            runParser parseDouble "42.85110aaa" `shouldBe` Right (42.8511, "aaa")
+        it "parse \"42.01aaa\" -> Right (42.8511, \"aaa\")" $ do
+            runParser parseUDouble "42.8511aaa" `shouldBe` Right (42.8511, "aaa")
+        it "parse \"4542aaa\" -> Right (4542.8511, \"aaa\")" $ do
+            runParser parseUDouble "4542.8511aaa" `shouldBe` Right (4542.8511, "aaa")
+        it "parse \"45454542aaa\" -> Right (4542.8511, \"aaa\")" $ do
+            runParser parseUDouble "45454542.8511aaa" `shouldBe` Right (45454542.8511, "aaa")
+        it "parse \"45489658962aaaa\" -> Right (4542.8511, \"aaa\")" $ do
+            runParser parseUDouble "45489658962.8511aaa" `shouldBe` Right (45489658962.8511, "aaa")
+        it "parse \"aaa\" -> Left _" $ do
+            runParser parseUDouble "aaa42.21585" `shouldSatisfy` isLeft
+        it "parse \"aaa42.5852\" -> Left _" $ do
+            runParser parseUDouble "aaa42.8511" `shouldSatisfy` isLeft
+
+testParseDouble::Spec
+testParseDouble =
+    describe "Parse Double" $ do
+        it "parse \"42.8511aaa\" -> Right (42.8511, \"aaa\")" $ do
+            runParser parseDouble "42.8511aaa" `shouldBe` Right (42.8511, "aaa")
+        it "parse \"aaa\" -> Left _" $ do
+            runParser parseDouble "aaa" `shouldSatisfy` isLeft
+        it "parse \"-42.8511aaa\" -> Right (-42.8511, \"aaa\")" $ do
+            runParser parseDouble "-42.8511aaa" `shouldBe` Right (-42.8511, "aaa")
+        it "parse \"aaa\" -> Left _" $ do
+            runParser parseDouble "aaa" `shouldSatisfy` isLeft
+        it "parse \"42.8511aaa\" -> Right (42.8511, \"aaa\")" $ do
+            runParser parseDouble "42.8511aaa" `shouldBe` Right (42.8511, "aaa")
+        it "parse \"4542.8511aaa\" -> Right (4542.8511, \"aaa\")" $ do
+            runParser parseDouble "4542.8511aaa" `shouldBe` Right (4542.8511, "aaa")
+        it "parse \"45454542.8511aaa\" -> Right (45454542.8511, \"aaa\")" $ do
+            runParser parseDouble "45454542.8511aaa" `shouldBe` Right (45454542.8511, "aaa")
+        it "parse \"45489658962.8511aaaa\" -> Right (45489658962.8511, \"aaa\")" $ do
+            runParser parseDouble "45489658962.8511aaa" `shouldBe` Right (45489658962.8511, "aaa")
+        it "parse \"aaa\" -> Left _" $ do
+            runParser parseDouble "aaa" `shouldSatisfy` isLeft
+        it "parse \"aaa42\" -> Left _" $ do
+            runParser parseDouble "aaa42.8511" `shouldSatisfy` isLeft
+        it "parse \"42.8511aaa\" -> Right (-42.8511, \"aaa\")" $ do
+            runParser parseDouble "-42.8511aaa" `shouldBe` Right (-42.8511, "aaa")
+        it "parse \"4542.8511aaa\" -> Right (-4542.8511, \"aaa\")" $ do
+            runParser parseDouble "-4542.8511aaa" `shouldBe` Right (-4542.8511, "aaa")
+        it "parse \"45454542.8511aaa\" -> Right (-45454542.8511, \"aaa\")" $ do
+            runParser parseDouble "-45454542.8511aaa" `shouldBe` Right (-45454542.8511, "aaa")
+        it "parse \"-45489658962.8511aaaa\" -> Right (-45489658962.8511, \"aaa\")" $ do
+            runParser parseDouble "-45489658962.8511aaa" `shouldBe` Right (-45489658962.8511, "aaa")
+        it "parse \"aaa\" -> Left _" $ do
+            runParser parseDouble "aaa" `shouldSatisfy` isLeft
+        it "parse \"aaa-42.8511\" -> Left _" $ do
+            runParser parseDouble "aaa-42.8511" `shouldSatisfy` isLeft

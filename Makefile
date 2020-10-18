@@ -50,7 +50,7 @@ ghci:
 
 
 test:
-	$(stack) test $(package)
+	-$(stack) test $(package)
 
 
 test-ghci:
@@ -68,8 +68,10 @@ ghcid:
 dev-deps:
 	stack install ghcid
 
-tests_run: re test
-	test/run.sh
+func_tests:
+	-test/run.sh
+
+tests_run: re test func_tests
 
 sign:
 	@echo ""
@@ -80,4 +82,4 @@ sign:
 	@echo "*******************"
 	@echo ""
 
-.PHONY : build build-dirty run install ghci test test-ghci ghcid dev-deps re clean fclean all
+.PHONY : build build-dirty run install ghci test func_tests test-ghci ghcid dev-deps re clean fclean all

@@ -2,8 +2,8 @@ module EvalSpec where
 
 import Test.Hspec
 import Test.QuickCheck
---import Data.Either
---import RecursiveDescent
+import Data.Either
+import RecursiveDescent
 
 spec :: Spec
 spec = describe "Eval Testing" $ do
