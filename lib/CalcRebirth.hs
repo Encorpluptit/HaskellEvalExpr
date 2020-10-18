@@ -28,19 +28,27 @@ eval e = case e of
     Number n    -> n
     Fail s      -> error s
 
-start :: Parser Expr
-start = Parser fct
-    where
-        fct s = case runParser factor s of
-            Nothing -> Nothing
-            Just (x, xs) -> runParser (loop x) xs
+--start :: Parser Expr
+--start = Parser fct
+--    where
+--        fct s = case runParser multitive s of
+--            Nothing -> Nothing
+--            Just (x, xs) -> trace (show x) runParser (loop x) xs
+--
+--loop :: Expr -> Parser Expr
+--loop a = Parser fct
+--    where
+--        fct s = case runParser ((parseSpacedChar '-') *> factor) s of
+--            Nothing -> trace (show a) Just (a, s)
+--            Just (x, xs) -> runParser (loop (Sub a x)) xs
 
-loop :: Expr -> Parser Expr
-loop a = Parser rp
+
+loop :: (Expr -> Expr -> Expr) -> Parser Expr->  Char -> Expr -> Parser Expr
+loop op p c a = Parser rp
     where
-        rp str = case runParser ((parseSpacedChar '-') *> factor) str of
-            Nothing -> Just (a, str)
-            Just (x, xs) -> runParser (loop (Sub a x)) xs
+        rp str = case runParser ((parseSpacedChar c) *> factor) str of
+            Nothing -> trace (show a) Just (a, str)
+            Just (x, xs) -> runParser (loop op p c (op a x)) xs
 
 --decimal >>= loop
 
@@ -50,8 +58,11 @@ additive :: Parser Expr
 --additive = applyOp Add '+' start multiply <|> applyOp Sub '-' start multiply <|> multiply
 --additive = applyOp Add '+' multiply additive <|> applyOp Sub '-' additive (loop (Number 0)) <|> multitive
 --additive = applyOp Add '+' multitive additive <|> (Sub <$> start <*> ((parseSpacedChar '-') *> additive)) <|> multitive
---additive = applyOp Add '+' multitive additive <|> start <|> multitive
-additive = applyOp Add '+' multitive additive <|> (factor >>= loop) <|> multitive
+additive = applyOp Add '+' multitive additive <|> applyOp Sub '-' multitive additive <|> multitive
+--additive = applyOp Sub '-' (factor >>= loop Sub '-') additive <|> applyOp Add '+' multitive additive <|> multitive
+--additive = (multitive >>= loop Sub '-') <|> applyOp Add '+' multitive additive <|> multitive
+--additive = (factor >>= loop Sub '-') <|> applyOp Add '+' multitive additive <|> applyOp Sub '-' multitive additive <|> multitive
+--additive = start <|> applyOp Add '+' multitive additive <|> multitive
 --additive = applyOp Add '+' multitive additive <|> applyOp Sub '-' multitive additive <|> multitive
 
 multitive :: Parser Expr
@@ -61,84 +72,10 @@ factor :: Parser Expr
 factor = parenthesis <|> parseNum
 
 parenthesis :: Parser Expr
-parenthesis = parseSpacedChar '(' *> expr <* parseSpacedChar ')'
+parenthesis = parseSpacedChar '(' *> additive <* parseSpacedChar ')'
 
--- GOOD OMFG
---opNeg :: (Expr -> Expr -> Expr) -> Char -> Parser Expr -> Parser Expr -> Parser Expr
---opNeg c o p1 p2 = c <$> fct <*> (parseSpacedChar o *> p2)
---    where
---        fct = (p1 >>= (\x -> multiply))
-
-
---chainLeftAssociative :: Parser a -> (a -> a -> a) -> a -> Parser a
---chainLeftAssociative p op a = (p `chainLeftAssociative'` op) <|> return a
---
---chainLeftAssociative' :: Parser Expr -> Char -> (Expr -> Expr -> Expr) -> Parser Expr
---chainLeftAssociative' p o op = fct p ((parseSpacedChar o *> additive))
---    where
---        fct x p = do
---            b <- op <$> p <*> (parseSpacedChar o *> additive)
---            fct b p
---            <|> return x
-
---chainLeftAssociative' :: Parser Expr -> Parser (Expr -> Expr -> Expr) -> Parser Expr
---chainLeftAssociative' p op = do x <- p; fct x
---    where
---        fct x = do f <- op
---                   b <- p
---                   fct (f x b)
---                <|> return x
---chainLeftAssociative' :: Parser Expr -> Parser Expr -> (Expr -> Expr -> Expr) -> Parser Expr
-----chainLeftAssociative' p1 op = (chainLeftAssociative' p op) <|> p
---chainLeftAssociative' p1 op = (>>=) <$> p1 <*> p1 <|> p1
---chainLeftAssociative' p op = do x <- p; fct x
---    where
---        fct x = do
---                fct p
---                <|> return x
-
-
---decimal >>= loop
-
---chainLeftAssociative :: Parser Expr -> Parser (Expr -> Expr -> Expr) -> Parser Expr -> Parser Expr
-----chainLeftAssociative :: Parser a -> Parser (a -> a -> a) -> a -> Parser a
-----chainLeftAssociative p op a = chainLeftAssociative'  <|> return a
---chainLeftAssociative p op a = chainLeftAssociative' p op <|> do
---    b <- p
---    return b
---    where f = Parser
-
---chainLeftAssociative' :: Parser Expr -> Char -> (Expr -> Expr -> Expr) -> Parser Expr
---chainLeftAssociative' p o op = do x <- p; fct x
---    where
---        fct x = do
---            b <- trace "lol" op <$> p <*> (parseSpacedChar o *> additive)
---            fct b
---            <|> return x
-
---op :: (Expr -> Expr -> Expr) -> Char -> Parser Expr -> Parser Expr -> Parser Expr
---op c o p1 p2 = c <$> p1 <*> (parseSpacedChar o *> p2)
-
---op :: (Expr -> Expr -> Expr) -> Char -> Parser Expr -> Parser Expr -> Parser Expr
-----op c o p1 p2 = c <$> (chainLeftAssociative' p1 o c) <*> (parseSpacedChar o *> p2)
-----op c o p1 p2 = c <$> (chainLeftAssociative p1 p' (c <$> p1 <*> p2)) <*> (parseSpacedChar o *> p2)
---op c o p1 p2 = chainLeftAssociative p1 p' (c <$> p1 <*> (parseSpacedChar o *> p2)) <|> c <$> p1 <*> (parseSpacedChar o *> p2)
---    where
---        p' = Parser (c)
---        fct s = runParser (c <$> p1 <*> (parseSpacedChar o *> p2)) s
-----        fct a b = do
-----            parseSpacedChar o
-----            return c
-
---decimal >>= loop
-
---op :: (Expr -> Expr -> Expr) -> Char -> Parser Expr -> Parser Expr -> Parser Expr
---applyOpAdditive :: (Expr -> Expr -> Expr) -> Char -> Parser Expr -> Parser Expr -> Parser Expr
---applyOpAdditive op c p1 p2 = chainLeftAssociative' p' op <|> p'
---    where
---        p' = op <$> p1 <*> (parseSpacedChar c *> p2)
---
 applyOp :: (Expr -> Expr -> Expr) -> Char -> Parser Expr -> Parser Expr -> Parser Expr
+--applyOp op c p1 p2 = op <$> (factor >>= loop op p1 c) <*> (parseSpacedChar c *> p2)
 applyOp op c p1 p2 = op <$> p1 <*> (parseSpacedChar c *> p2)
 --        p' = op <$> p1 <*> p2
 

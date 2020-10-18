@@ -5,35 +5,47 @@ import BootstrapJust
 
 --------
 
-parseNum :: Parser Float
-parseNum = parseSpacedChar '+' *> parseFloat <|> parseSpaced parseFloat
+data Expr = Add Expr Expr
+          | Sub Expr Expr
+          | Mul Expr Expr
+          | Div Expr Expr
+          | Number Float
+          | Fail String
+          deriving (Show, Eq, Ord)
 
-additive :: Parser (Float -> Float -> Float)
+--parseNum :: Parser Float
+--parseNum = parseSpacedChar '+' *> parseFloat <|> parseSpaced parseFloat
+parseNum :: Parser Expr
+--parseNum =  (Number <$> parseFloat)
+parseNum = parseChar '+' *> (Number <$> parseFloat) <|> (Number <$> parseFloat)
+
+additive :: Parser (Expr -> Expr -> Expr)
 additive = do
     parseSpacedChar '+'
-    return (+)
+    return Add
     <|> do
     parseSpacedChar '-'
-    return (-)
+    return Sub
 
-multitive :: Parser (Float -> Float -> Float)
+multitive :: Parser (Expr -> Expr -> Expr)
 multitive = do
     parseSpacedChar '*'
-    return (*)
+    return Mul
     <|> do
     parseSpacedChar '/'
-    return (/)
+    return Div
 
-expr :: Parser Float
+expr :: Parser Expr
 expr  = term `chainLeftAssociative'` additive
 
-term :: Parser Float
+term :: Parser Expr
 term = factor `chainLeftAssociative'` multitive
 
-factor :: Parser Float
-factor = parseNum <|>  parens expr
+factor :: Parser Expr
+--factor = parseNum <|>  parens expr
+factor = parens expr <|> parseNum
 
-parens :: Parser a -> Parser a
+parens :: Parser Expr -> Parser Expr
 parens p = do
     parseSpacedChar '('
     a <- p
@@ -51,8 +63,19 @@ chainLeftAssociative' p op = do x <- p; fct x
                    fct (f x b)
                 <|> return x
 
+eval :: Expr -> Float
+eval e = case e of
+    Add a b         -> eval a + eval b
+    Sub a b         -> eval a - eval b
+    Mul a b         -> eval a * eval b
+    Div a (Number 0)-> error "Cannot Divide by zero"
+    Div a b         -> eval a / eval b
+    Number n        -> n
+    Fail s          -> error s
+
+
 evalExpr :: String -> Maybe Float
 evalExpr s = case runParser expr s of
-    Just (a, [])    -> Just a
+    Just (a, [])    -> Just (eval a)
     _               -> Nothing
 
